@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { useGetDashboardSummary, useListOrders, useListDrivers, useListActivities } from "@workspace/api-client-react";
 import { OrderStatusBadge, DriverStatusBadge } from "@/components/status-badges";
 import { AssignDriverDialog } from "@/components/assign-driver-dialog";
+import { NewOrderDialog } from "@/components/new-order-dialog";
 import { Order } from "@workspace/api-client-react";
+import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 import { cn } from "@/lib/utils";
 import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +33,7 @@ function getActivityIcon(action: string) {
 export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [newOrderOpen, setNewOrderOpen] = useState(false);
 
   const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary } = useGetDashboardSummary({
     query: { refetchInterval: 5000 }
@@ -55,6 +58,8 @@ export default function Dashboard() {
     { query: { refetchInterval: 5000 } }
   );
 
+  useNewOrderAlert(pendingOrders?.length);
+
   useEffect(() => {
     if (!fetchingSummary) {
       setLastUpdated(new Date());
@@ -77,6 +82,12 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
+          <Button
+            onClick={() => setNewOrderOpen(true)}
+            className="glow-pulse bg-primary text-primary-foreground hover:bg-primary/90 font-semibold tracking-wide h-11 px-6 shrink-0"
+          >
+            + Nouvelle commande
+          </Button>
         </div>
 
         {/* KPIs */}
@@ -283,6 +294,10 @@ export default function Dashboard() {
       <AssignDriverDialog 
         order={selectedOrder} 
         onClose={() => setSelectedOrder(null)} 
+      />
+      <NewOrderDialog
+        open={newOrderOpen}
+        onClose={() => setNewOrderOpen(false)}
       />
     </Layout>
   );
