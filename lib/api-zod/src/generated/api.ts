@@ -146,6 +146,9 @@ export const ListDriversResponseItem = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
   lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
@@ -182,6 +185,9 @@ export const GetDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
   lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
@@ -216,8 +222,144 @@ export const UpdateDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
   lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
+});
+
+/**
+ * @summary Record an order refusal for a driver
+ */
+export const RecordDriverRefusalParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RecordDriverRefusalBody = zod.object({
+  orderId: zod.number().nullish(),
+});
+
+export const RecordDriverRefusalResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  vehicleType: zod.string(),
+  status: zod.enum(["available", "busy", "offline"]),
+  rating: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Send a warning to a driver
+ */
+export const WarnDriverParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const WarnDriverBody = zod.object({
+  reason: zod.string().optional(),
+});
+
+export const WarnDriverResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  vehicleType: zod.string(),
+  status: zod.enum(["available", "busy", "offline"]),
+  rating: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Block or unblock a driver
+ */
+export const ToggleBlockDriverParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ToggleBlockDriverBody = zod.object({
+  blocked: zod.boolean(),
+});
+
+export const ToggleBlockDriverResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  vehicleType: zod.string(),
+  status: zod.enum(["available", "busy", "offline"]),
+  rating: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Get all reviews for a driver
+ */
+export const GetDriverReviewsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const getDriverReviewsQueryLimitDefault = 20;
+
+export const GetDriverReviewsQueryParams = zod.object({
+  limit: zod.coerce.number().default(getDriverReviewsQueryLimitDefault),
+});
+
+export const GetDriverReviewsResponseItem = zod.object({
+  id: zod.number(),
+  driverId: zod.number(),
+  orderId: zod.number().nullish(),
+  rating: zod.number(),
+  comment: zod.string().nullish(),
+  sentiment: zod.enum(["positive", "negative", "neutral"]),
+  createdAt: zod.string(),
+});
+export const GetDriverReviewsResponse = zod.array(GetDriverReviewsResponseItem);
+
+/**
+ * @summary Add a review for a driver
+ */
+export const CreateDriverReviewParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const createDriverReviewBodyRatingMax = 5;
+
+export const CreateDriverReviewBody = zod.object({
+  rating: zod.number().min(1).max(createDriverReviewBodyRatingMax),
+  comment: zod.string().nullish(),
+  orderId: zod.number().nullish(),
+  sentiment: zod.enum(["positive", "negative", "neutral"]),
 });
 
 /**
@@ -245,6 +387,9 @@ export const UpdateDriverLocationResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
   lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });

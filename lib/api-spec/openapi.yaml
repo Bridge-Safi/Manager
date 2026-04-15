@@ -15,6 +15,7 @@ tags:
   - name: activities
   - name: alerts
   - name: reset-requests
+  - name: reviews
 paths:
   /healthz:
     get:
@@ -186,6 +187,140 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}/refuse:
+    post:
+      operationId: recordDriverRefusal
+      tags: [drivers]
+      summary: Record an order refusal for a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: integer
+                  nullable: true
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}/warn:
+    post:
+      operationId: warnDriver
+      tags: [drivers]
+      summary: Send a warning to a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}/block:
+    patch:
+      operationId: toggleBlockDriver
+      tags: [drivers]
+      summary: Block or unblock a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                blocked:
+                  type: boolean
+              required:
+                - blocked
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}/reviews:
+    get:
+      operationId: getDriverReviews
+      tags: [reviews]
+      summary: Get all reviews for a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+    post:
+      operationId: createDriverReview
+      tags: [reviews]
+      summary: Add a review for a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewBody"
+      responses:
+        "201":
+          description: Created review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
 
   /drivers/{id}/location:
     patch:
@@ -558,6 +693,13 @@ components:
         avatarUrl:
           type: string
           nullable: true
+        totalRefusals:
+          type: integer
+        isBlocked:
+          type: boolean
+        warnedAt:
+          type: string
+          nullable: true
         lastActiveAt:
           type: string
           nullable: true
@@ -572,6 +714,8 @@ components:
         - rating
         - totalDeliveries
         - totalRevenue
+        - totalRefusals
+        - isBlocked
         - createdAt
 
     CreateDriverBody:
@@ -843,3 +987,50 @@ components:
           type: integer
       required:
         - count
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        driverId:
+          type: integer
+        orderId:
+          type: integer
+          nullable: true
+        rating:
+          type: integer
+        comment:
+          type: string
+          nullable: true
+        sentiment:
+          type: string
+          enum: [positive, negative, neutral]
+        createdAt:
+          type: string
+      required:
+        - id
+        - driverId
+        - rating
+        - sentiment
+        - createdAt
+
+    CreateReviewBody:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        orderId:
+          type: integer
+          nullable: true
+        sentiment:
+          type: string
+          enum: [positive, negative, neutral]
+      required:
+        - rating
+        - sentiment

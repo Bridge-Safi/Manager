@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, driversTable, activitiesTable, ordersTable } from "@workspace/db";
+import { db, driversTable, activitiesTable, ordersTable, reviewsTable } from "@workspace/db";
 import { eq, desc, and, sql, gte } from "drizzle-orm";
 import {
   CreateDriverBody,

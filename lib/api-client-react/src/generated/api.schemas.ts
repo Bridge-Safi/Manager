@@ -85,6 +85,9 @@ export interface Driver {
   lat?: number | null;
   lng?: number | null;
   avatarUrl?: string | null;
+  totalRefusals: number;
+  isBlocked: boolean;
+  warnedAt?: string | null;
   lastActiveAt?: string | null;
   createdAt: string;
 }
@@ -259,6 +262,45 @@ export interface PendingCount {
   count: number;
 }
 
+export type ReviewSentiment =
+  (typeof ReviewSentiment)[keyof typeof ReviewSentiment];
+
+export const ReviewSentiment = {
+  positive: "positive",
+  negative: "negative",
+  neutral: "neutral",
+} as const;
+
+export interface Review {
+  id: number;
+  driverId: number;
+  orderId?: number | null;
+  rating: number;
+  comment?: string | null;
+  sentiment: ReviewSentiment;
+  createdAt: string;
+}
+
+export type CreateReviewBodySentiment =
+  (typeof CreateReviewBodySentiment)[keyof typeof CreateReviewBodySentiment];
+
+export const CreateReviewBodySentiment = {
+  positive: "positive",
+  negative: "negative",
+  neutral: "neutral",
+} as const;
+
+export interface CreateReviewBody {
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating: number;
+  comment?: string | null;
+  orderId?: number | null;
+  sentiment: CreateReviewBodySentiment;
+}
+
 export type ListOrdersParams = {
   status?: ListOrdersStatus;
   driverId?: number;
@@ -274,6 +316,22 @@ export const ListOrdersStatus = {
   delivered: "delivered",
   cancelled: "cancelled",
 } as const;
+
+export type RecordDriverRefusalBody = {
+  orderId?: number | null;
+};
+
+export type WarnDriverBody = {
+  reason?: string;
+};
+
+export type ToggleBlockDriverBody = {
+  blocked: boolean;
+};
+
+export type GetDriverReviewsParams = {
+  limit?: number;
+};
 
 export type GetDriverActivitiesParams = {
   limit?: number;

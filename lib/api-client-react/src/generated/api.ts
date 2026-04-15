@@ -22,22 +22,28 @@ import type {
   CreateDriverBody,
   CreateOrderBody,
   CreateResetRequestBody,
+  CreateReviewBody,
   DashboardSummary,
   Driver,
   DriverStats,
   DriverTodayStats,
   GetDriverActivitiesParams,
+  GetDriverReviewsParams,
   HealthStatus,
   ListActivitiesParams,
   ListOrdersParams,
   ListResetRequestsParams,
   Order,
   PendingCount,
+  RecordDriverRefusalBody,
   ResetRequest,
   RevenueDay,
+  Review,
+  ToggleBlockDriverBody,
   UpdateDriverBody,
   UpdateDriverLocationBody,
   UpdateOrderBody,
+  WarnDriverBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -805,6 +811,464 @@ export const useUpdateDriver = <
   TContext
 > => {
   return useMutation(getUpdateDriverMutationOptions(options));
+};
+
+/**
+ * @summary Record an order refusal for a driver
+ */
+export const getRecordDriverRefusalUrl = (id: number) => {
+  return `/api/drivers/${id}/refuse`;
+};
+
+export const recordDriverRefusal = async (
+  id: number,
+  recordDriverRefusalBody: RecordDriverRefusalBody,
+  options?: RequestInit,
+): Promise<Driver> => {
+  return customFetch<Driver>(getRecordDriverRefusalUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(recordDriverRefusalBody),
+  });
+};
+
+export const getRecordDriverRefusalMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordDriverRefusal>>,
+    TError,
+    { id: number; data: BodyType<RecordDriverRefusalBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordDriverRefusal>>,
+  TError,
+  { id: number; data: BodyType<RecordDriverRefusalBody> },
+  TContext
+> => {
+  const mutationKey = ["recordDriverRefusal"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordDriverRefusal>>,
+    { id: number; data: BodyType<RecordDriverRefusalBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return recordDriverRefusal(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordDriverRefusalMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordDriverRefusal>>
+>;
+export type RecordDriverRefusalMutationBody = BodyType<RecordDriverRefusalBody>;
+export type RecordDriverRefusalMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Record an order refusal for a driver
+ */
+export const useRecordDriverRefusal = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordDriverRefusal>>,
+    TError,
+    { id: number; data: BodyType<RecordDriverRefusalBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof recordDriverRefusal>>,
+  TError,
+  { id: number; data: BodyType<RecordDriverRefusalBody> },
+  TContext
+> => {
+  return useMutation(getRecordDriverRefusalMutationOptions(options));
+};
+
+/**
+ * @summary Send a warning to a driver
+ */
+export const getWarnDriverUrl = (id: number) => {
+  return `/api/drivers/${id}/warn`;
+};
+
+export const warnDriver = async (
+  id: number,
+  warnDriverBody: WarnDriverBody,
+  options?: RequestInit,
+): Promise<Driver> => {
+  return customFetch<Driver>(getWarnDriverUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(warnDriverBody),
+  });
+};
+
+export const getWarnDriverMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof warnDriver>>,
+    TError,
+    { id: number; data: BodyType<WarnDriverBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof warnDriver>>,
+  TError,
+  { id: number; data: BodyType<WarnDriverBody> },
+  TContext
+> => {
+  const mutationKey = ["warnDriver"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof warnDriver>>,
+    { id: number; data: BodyType<WarnDriverBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return warnDriver(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WarnDriverMutationResult = NonNullable<
+  Awaited<ReturnType<typeof warnDriver>>
+>;
+export type WarnDriverMutationBody = BodyType<WarnDriverBody>;
+export type WarnDriverMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a warning to a driver
+ */
+export const useWarnDriver = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof warnDriver>>,
+    TError,
+    { id: number; data: BodyType<WarnDriverBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof warnDriver>>,
+  TError,
+  { id: number; data: BodyType<WarnDriverBody> },
+  TContext
+> => {
+  return useMutation(getWarnDriverMutationOptions(options));
+};
+
+/**
+ * @summary Block or unblock a driver
+ */
+export const getToggleBlockDriverUrl = (id: number) => {
+  return `/api/drivers/${id}/block`;
+};
+
+export const toggleBlockDriver = async (
+  id: number,
+  toggleBlockDriverBody: ToggleBlockDriverBody,
+  options?: RequestInit,
+): Promise<Driver> => {
+  return customFetch<Driver>(getToggleBlockDriverUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(toggleBlockDriverBody),
+  });
+};
+
+export const getToggleBlockDriverMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleBlockDriver>>,
+    TError,
+    { id: number; data: BodyType<ToggleBlockDriverBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toggleBlockDriver>>,
+  TError,
+  { id: number; data: BodyType<ToggleBlockDriverBody> },
+  TContext
+> => {
+  const mutationKey = ["toggleBlockDriver"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toggleBlockDriver>>,
+    { id: number; data: BodyType<ToggleBlockDriverBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return toggleBlockDriver(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ToggleBlockDriverMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toggleBlockDriver>>
+>;
+export type ToggleBlockDriverMutationBody = BodyType<ToggleBlockDriverBody>;
+export type ToggleBlockDriverMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Block or unblock a driver
+ */
+export const useToggleBlockDriver = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleBlockDriver>>,
+    TError,
+    { id: number; data: BodyType<ToggleBlockDriverBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof toggleBlockDriver>>,
+  TError,
+  { id: number; data: BodyType<ToggleBlockDriverBody> },
+  TContext
+> => {
+  return useMutation(getToggleBlockDriverMutationOptions(options));
+};
+
+/**
+ * @summary Get all reviews for a driver
+ */
+export const getGetDriverReviewsUrl = (
+  id: number,
+  params?: GetDriverReviewsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/drivers/${id}/reviews?${stringifiedParams}`
+    : `/api/drivers/${id}/reviews`;
+};
+
+export const getDriverReviews = async (
+  id: number,
+  params?: GetDriverReviewsParams,
+  options?: RequestInit,
+): Promise<Review[]> => {
+  return customFetch<Review[]>(getGetDriverReviewsUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDriverReviewsQueryKey = (
+  id: number,
+  params?: GetDriverReviewsParams,
+) => {
+  return [`/api/drivers/${id}/reviews`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetDriverReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriverReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  params?: GetDriverReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDriverReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDriverReviewsQueryKey(id, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDriverReviews>>
+  > = ({ signal }) =>
+    getDriverReviews(id, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriverReviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriverReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriverReviews>>
+>;
+export type GetDriverReviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all reviews for a driver
+ */
+
+export function useGetDriverReviews<
+  TData = Awaited<ReturnType<typeof getDriverReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  params?: GetDriverReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDriverReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriverReviewsQueryOptions(id, params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a review for a driver
+ */
+export const getCreateDriverReviewUrl = (id: number) => {
+  return `/api/drivers/${id}/reviews`;
+};
+
+export const createDriverReview = async (
+  id: number,
+  createReviewBody: CreateReviewBody,
+  options?: RequestInit,
+): Promise<Review> => {
+  return customFetch<Review>(getCreateDriverReviewUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createReviewBody),
+  });
+};
+
+export const getCreateDriverReviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDriverReview>>,
+    TError,
+    { id: number; data: BodyType<CreateReviewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createDriverReview>>,
+  TError,
+  { id: number; data: BodyType<CreateReviewBody> },
+  TContext
+> => {
+  const mutationKey = ["createDriverReview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createDriverReview>>,
+    { id: number; data: BodyType<CreateReviewBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createDriverReview(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateDriverReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createDriverReview>>
+>;
+export type CreateDriverReviewMutationBody = BodyType<CreateReviewBody>;
+export type CreateDriverReviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a review for a driver
+ */
+export const useCreateDriverReview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDriverReview>>,
+    TError,
+    { id: number; data: BodyType<CreateReviewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createDriverReview>>,
+  TError,
+  { id: number; data: BodyType<CreateReviewBody> },
+  TContext
+> => {
+  return useMutation(getCreateDriverReviewMutationOptions(options));
 };
 
 /**

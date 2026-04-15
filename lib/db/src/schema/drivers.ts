@@ -1,4 +1,4 @@
-import { pgTable, serial, text, real, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, real, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +12,9 @@ export const driversTable = pgTable("drivers", {
   rating: real("rating").notNull().default(5.0),
   totalDeliveries: integer("total_deliveries").notNull().default(0),
   totalRevenue: real("total_revenue").notNull().default(0),
+  totalRefusals: integer("total_refusals").notNull().default(0),
+  isBlocked: boolean("is_blocked").notNull().default(false),
+  warnedAt: timestamp("warned_at"),
   lat: real("lat"),
   lng: real("lng"),
   avatarUrl: text("avatar_url"),

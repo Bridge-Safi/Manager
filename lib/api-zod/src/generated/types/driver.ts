@@ -20,6 +20,9 @@ export interface Driver {
   lat?: number | null;
   lng?: number | null;
   avatarUrl?: string | null;
+  totalRefusals: number;
+  isBlocked: boolean;
+  warnedAt?: string | null;
   lastActiveAt?: string | null;
   createdAt: string;
 }
