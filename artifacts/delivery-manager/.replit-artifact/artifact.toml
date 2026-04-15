@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "GradoEats Manager"
+version = "1.0.0"
+id = "artifacts/delivery-manager"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23696
+
+[services.development]
+run = "pnpm --filter @workspace/delivery-manager run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/delivery-manager", "run", "build" ]
+publicDir = "artifacts/delivery-manager/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23696"
+BASE_PATH = "/"

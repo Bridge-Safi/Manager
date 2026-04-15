@@ -1,0 +1,23 @@
+import { pgTable, serial, text, real, integer, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+export const driversTable = pgTable("drivers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  vehicleType: text("vehicle_type").notNull().default("moto"),
+  status: text("status").notNull().default("available"),
+  rating: real("rating").notNull().default(5.0),
+  totalDeliveries: integer("total_deliveries").notNull().default(0),
+  totalRevenue: real("total_revenue").notNull().default(0),
+  lat: real("lat"),
+  lng: real("lng"),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDriverSchema = createInsertSchema(driversTable).omit({ id: true, createdAt: true });
+export type InsertDriver = z.infer<typeof insertDriverSchema>;
+export type Driver = typeof driversTable.$inferSelect;
