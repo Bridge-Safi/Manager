@@ -5,6 +5,7 @@ import driversRouter from "./drivers";
 import dashboardRouter from "./dashboard";
 import activitiesRouter from "./activities";
 import alertsRouter from "./alerts";
+import resetRequestsRouter from "./reset-requests";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use("/drivers", driversRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/activities", activitiesRouter);
 router.use("/alerts", alertsRouter);
+router.use("/reset-requests", resetRequestsRouter);
 
 export default router;

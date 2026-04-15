@@ -392,3 +392,81 @@ export const GetDriverStatsResponseItem = zod.object({
   status: zod.string(),
 });
 export const GetDriverStatsResponse = zod.array(GetDriverStatsResponseItem);
+
+/**
+ * @summary List all reset requests (pending first)
+ */
+export const ListResetRequestsQueryParams = zod.object({
+  status: zod.enum(["pending", "sent", "completed"]).optional(),
+});
+
+export const ListResetRequestsResponseItem = zod.object({
+  id: zod.number(),
+  driverId: zod.number(),
+  driverName: zod.string().nullish(),
+  driverPhone: zod.string().nullish(),
+  type: zod.enum(["password", "pin"]),
+  status: zod.enum(["pending", "sent", "completed"]),
+  resetCode: zod.string(),
+  resetLink: zod.string().nullish(),
+  requestedAt: zod.string(),
+  sentAt: zod.string().nullish(),
+});
+export const ListResetRequestsResponse = zod.array(
+  ListResetRequestsResponseItem,
+);
+
+/**
+ * @summary Create a reset request for a driver
+ */
+export const CreateResetRequestBody = zod.object({
+  driverId: zod.number(),
+  type: zod.enum(["password", "pin"]),
+});
+
+/**
+ * @summary Get count of pending reset requests
+ */
+export const GetResetRequestsPendingCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Mark a reset request as sent
+ */
+export const MarkResetRequestSentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const MarkResetRequestSentResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number(),
+  driverName: zod.string().nullish(),
+  driverPhone: zod.string().nullish(),
+  type: zod.enum(["password", "pin"]),
+  status: zod.enum(["pending", "sent", "completed"]),
+  resetCode: zod.string(),
+  resetLink: zod.string().nullish(),
+  requestedAt: zod.string(),
+  sentAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Mark a reset request as completed
+ */
+export const MarkResetRequestCompleteParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const MarkResetRequestCompleteResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number(),
+  driverName: zod.string().nullish(),
+  driverPhone: zod.string().nullish(),
+  type: zod.enum(["password", "pin"]),
+  status: zod.enum(["pending", "sent", "completed"]),
+  resetCode: zod.string(),
+  resetLink: zod.string().nullish(),
+  requestedAt: zod.string(),
+  sentAt: zod.string().nullish(),
+});

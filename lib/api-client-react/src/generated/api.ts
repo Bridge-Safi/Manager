@@ -21,6 +21,7 @@ import type {
   Alert,
   CreateDriverBody,
   CreateOrderBody,
+  CreateResetRequestBody,
   DashboardSummary,
   Driver,
   DriverStats,
@@ -29,7 +30,10 @@ import type {
   HealthStatus,
   ListActivitiesParams,
   ListOrdersParams,
+  ListResetRequestsParams,
   Order,
+  PendingCount,
+  ResetRequest,
   RevenueDay,
   UpdateDriverBody,
   UpdateDriverLocationBody,
@@ -1482,3 +1486,431 @@ export function useGetDriverStats<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List all reset requests (pending first)
+ */
+export const getListResetRequestsUrl = (params?: ListResetRequestsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/reset-requests?${stringifiedParams}`
+    : `/api/reset-requests`;
+};
+
+export const listResetRequests = async (
+  params?: ListResetRequestsParams,
+  options?: RequestInit,
+): Promise<ResetRequest[]> => {
+  return customFetch<ResetRequest[]>(getListResetRequestsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListResetRequestsQueryKey = (
+  params?: ListResetRequestsParams,
+) => {
+  return [`/api/reset-requests`, ...(params ? [params] : [])] as const;
+};
+
+export const getListResetRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listResetRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListResetRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listResetRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListResetRequestsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listResetRequests>>
+  > = ({ signal }) => listResetRequests(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listResetRequests>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListResetRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listResetRequests>>
+>;
+export type ListResetRequestsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all reset requests (pending first)
+ */
+
+export function useListResetRequests<
+  TData = Awaited<ReturnType<typeof listResetRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListResetRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listResetRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListResetRequestsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a reset request for a driver
+ */
+export const getCreateResetRequestUrl = () => {
+  return `/api/reset-requests`;
+};
+
+export const createResetRequest = async (
+  createResetRequestBody: CreateResetRequestBody,
+  options?: RequestInit,
+): Promise<ResetRequest> => {
+  return customFetch<ResetRequest>(getCreateResetRequestUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createResetRequestBody),
+  });
+};
+
+export const getCreateResetRequestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createResetRequest>>,
+    TError,
+    { data: BodyType<CreateResetRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createResetRequest>>,
+  TError,
+  { data: BodyType<CreateResetRequestBody> },
+  TContext
+> => {
+  const mutationKey = ["createResetRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createResetRequest>>,
+    { data: BodyType<CreateResetRequestBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createResetRequest(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateResetRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createResetRequest>>
+>;
+export type CreateResetRequestMutationBody = BodyType<CreateResetRequestBody>;
+export type CreateResetRequestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a reset request for a driver
+ */
+export const useCreateResetRequest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createResetRequest>>,
+    TError,
+    { data: BodyType<CreateResetRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createResetRequest>>,
+  TError,
+  { data: BodyType<CreateResetRequestBody> },
+  TContext
+> => {
+  return useMutation(getCreateResetRequestMutationOptions(options));
+};
+
+/**
+ * @summary Get count of pending reset requests
+ */
+export const getGetResetRequestsPendingCountUrl = () => {
+  return `/api/reset-requests/pending-count`;
+};
+
+export const getResetRequestsPendingCount = async (
+  options?: RequestInit,
+): Promise<PendingCount> => {
+  return customFetch<PendingCount>(getGetResetRequestsPendingCountUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetResetRequestsPendingCountQueryKey = () => {
+  return [`/api/reset-requests/pending-count`] as const;
+};
+
+export const getGetResetRequestsPendingCountQueryOptions = <
+  TData = Awaited<ReturnType<typeof getResetRequestsPendingCount>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getResetRequestsPendingCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetResetRequestsPendingCountQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getResetRequestsPendingCount>>
+  > = ({ signal }) =>
+    getResetRequestsPendingCount({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getResetRequestsPendingCount>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetResetRequestsPendingCountQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getResetRequestsPendingCount>>
+>;
+export type GetResetRequestsPendingCountQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get count of pending reset requests
+ */
+
+export function useGetResetRequestsPendingCount<
+  TData = Awaited<ReturnType<typeof getResetRequestsPendingCount>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getResetRequestsPendingCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetResetRequestsPendingCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark a reset request as sent
+ */
+export const getMarkResetRequestSentUrl = (id: number) => {
+  return `/api/reset-requests/${id}/send`;
+};
+
+export const markResetRequestSent = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ResetRequest> => {
+  return customFetch<ResetRequest>(getMarkResetRequestSentUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getMarkResetRequestSentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markResetRequestSent>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markResetRequestSent>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["markResetRequestSent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markResetRequestSent>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return markResetRequestSent(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkResetRequestSentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markResetRequestSent>>
+>;
+
+export type MarkResetRequestSentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a reset request as sent
+ */
+export const useMarkResetRequestSent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markResetRequestSent>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markResetRequestSent>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getMarkResetRequestSentMutationOptions(options));
+};
+
+/**
+ * @summary Mark a reset request as completed
+ */
+export const getMarkResetRequestCompleteUrl = (id: number) => {
+  return `/api/reset-requests/${id}/complete`;
+};
+
+export const markResetRequestComplete = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ResetRequest> => {
+  return customFetch<ResetRequest>(getMarkResetRequestCompleteUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getMarkResetRequestCompleteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markResetRequestComplete>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markResetRequestComplete>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["markResetRequestComplete"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markResetRequestComplete>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return markResetRequestComplete(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkResetRequestCompleteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markResetRequestComplete>>
+>;
+
+export type MarkResetRequestCompleteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a reset request as completed
+ */
+export const useMarkResetRequestComplete = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markResetRequestComplete>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markResetRequestComplete>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getMarkResetRequestCompleteMutationOptions(options));
+};

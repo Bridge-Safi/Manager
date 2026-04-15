@@ -3,10 +3,10 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useListDrivers, useUpdateDriver, getListDriversQueryKey, getGetDashboardSummaryQueryKey, useGetDriverTodayStats, useGetDriverActivities, Driver } from "@workspace/api-client-react";
+import { useListDrivers, useUpdateDriver, getListDriversQueryKey, getGetDashboardSummaryQueryKey, useGetDriverTodayStats, useGetDriverActivities, useCreateResetRequest, getGetResetRequestsPendingCountQueryKey, Driver } from "@workspace/api-client-react";
 import { DriverStatusBadge } from "@/components/status-badges";
 import { DriverStatus } from "@workspace/api-client-react";
-import { Phone, Star, MapPin, Loader2, Activity as ActivityIcon, CheckCircle2, Package, Bike, X, Circle, WifiOff, Clock, DollarSign, TrendingUp } from "lucide-react";
+import { Phone, Star, MapPin, Loader2, Activity as ActivityIcon, CheckCircle2, Package, Bike, X, Circle, WifiOff, Clock, DollarSign, TrendingUp, KeyRound, LockKeyhole } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -55,6 +55,19 @@ export default function DriversPage() {
         queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
       }
     }
+  });
+
+  const resetMutation = useCreateResetRequest({
+    mutation: {
+      onSuccess: (data) => {
+        toast.success(
+          `Code généré : ${data.resetCode} — Copiez-le et envoyez-le à ${data.driverName ?? "le livreur"}`,
+          { duration: 8000 }
+        );
+        queryClient.invalidateQueries({ queryKey: getGetResetRequestsPendingCountQueryKey() });
+      },
+      onError: () => toast.error("Erreur lors de la création de la demande"),
+    },
   });
 
   const handleUpdateStatus = (id: number, status: DriverStatus) => {
@@ -162,6 +175,49 @@ export default function DriversPage() {
                         <div className="text-xs font-mono text-muted-foreground/50 border border-dashed border-white/10 px-2 py-1 rounded-md">Hors réseau</div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Reset buttons */}
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={resetMutation.isPending}
+                          className="flex-1 h-8 text-xs font-medium border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/40 transition-all"
+                        >
+                          {resetMutation.isPending ? (
+                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          ) : (
+                            <KeyRound className="w-3.5 h-3.5 mr-1.5" />
+                          )}
+                          Réinitialisation
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-xl border-white/10">
+                        <DropdownMenuItem
+                          onClick={() => resetMutation.mutate({ data: { driverId: driver.id, type: "password" } })}
+                          className="cursor-pointer font-medium flex items-center gap-2"
+                        >
+                          <LockKeyhole className="w-4 h-4 text-amber-400" />
+                          <div>
+                            <div className="text-sm">Mot de passe oublié</div>
+                            <div className="text-xs text-muted-foreground">Générer un lien de réinitialisation</div>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => resetMutation.mutate({ data: { driverId: driver.id, type: "pin" } })}
+                          className="cursor-pointer font-medium flex items-center gap-2"
+                        >
+                          <KeyRound className="w-4 h-4 text-primary" />
+                          <div>
+                            <div className="text-sm">Code PIN oublié</div>
+                            <div className="text-xs text-muted-foreground">Générer un nouveau code PIN</div>
+                          </div>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>

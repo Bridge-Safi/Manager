@@ -212,6 +212,53 @@ export interface DriverStats {
   status: string;
 }
 
+export type ResetRequestType =
+  (typeof ResetRequestType)[keyof typeof ResetRequestType];
+
+export const ResetRequestType = {
+  password: "password",
+  pin: "pin",
+} as const;
+
+export type ResetRequestStatus =
+  (typeof ResetRequestStatus)[keyof typeof ResetRequestStatus];
+
+export const ResetRequestStatus = {
+  pending: "pending",
+  sent: "sent",
+  completed: "completed",
+} as const;
+
+export interface ResetRequest {
+  id: number;
+  driverId: number;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  type: ResetRequestType;
+  status: ResetRequestStatus;
+  resetCode: string;
+  resetLink?: string | null;
+  requestedAt: string;
+  sentAt?: string | null;
+}
+
+export type CreateResetRequestBodyType =
+  (typeof CreateResetRequestBodyType)[keyof typeof CreateResetRequestBodyType];
+
+export const CreateResetRequestBodyType = {
+  password: "password",
+  pin: "pin",
+} as const;
+
+export interface CreateResetRequestBody {
+  driverId: number;
+  type: CreateResetRequestBodyType;
+}
+
+export interface PendingCount {
+  count: number;
+}
+
 export type ListOrdersParams = {
   status?: ListOrdersStatus;
   driverId?: number;
@@ -236,3 +283,16 @@ export type ListActivitiesParams = {
   limit?: number;
   driverId?: number;
 };
+
+export type ListResetRequestsParams = {
+  status?: ListResetRequestsStatus;
+};
+
+export type ListResetRequestsStatus =
+  (typeof ListResetRequestsStatus)[keyof typeof ListResetRequestsStatus];
+
+export const ListResetRequestsStatus = {
+  pending: "pending",
+  sent: "sent",
+  completed: "completed",
+} as const;

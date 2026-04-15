@@ -14,6 +14,7 @@ tags:
   - name: dashboard
   - name: activities
   - name: alerts
+  - name: reset-requests
 paths:
   /healthz:
     get:
@@ -338,6 +339,95 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/DriverStats"
+
+  /reset-requests:
+    get:
+      operationId: listResetRequests
+      tags: [reset-requests]
+      summary: List all reset requests (pending first)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, completed]
+      responses:
+        "200":
+          description: List of reset requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResetRequest"
+    post:
+      operationId: createResetRequest
+      tags: [reset-requests]
+      summary: Create a reset request for a driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateResetRequestBody"
+      responses:
+        "201":
+          description: Created reset request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetRequest"
+
+  /reset-requests/pending-count:
+    get:
+      operationId: getResetRequestsPendingCount
+      tags: [reset-requests]
+      summary: Get count of pending reset requests
+      responses:
+        "200":
+          description: Pending count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingCount"
+
+  /reset-requests/{id}/send:
+    patch:
+      operationId: markResetRequestSent
+      tags: [reset-requests]
+      summary: Mark a reset request as sent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated reset request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetRequest"
+
+  /reset-requests/{id}/complete:
+    patch:
+      operationId: markResetRequestComplete
+      tags: [reset-requests]
+      summary: Mark a reset request as completed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated reset request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetRequest"
 
 components:
   schemas:
@@ -696,3 +786,60 @@ components:
         - revenue
         - rating
         - status
+
+    ResetRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        driverId:
+          type: integer
+        driverName:
+          type: string
+          nullable: true
+        driverPhone:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [password, pin]
+        status:
+          type: string
+          enum: [pending, sent, completed]
+        resetCode:
+          type: string
+        resetLink:
+          type: string
+          nullable: true
+        requestedAt:
+          type: string
+        sentAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - driverId
+        - type
+        - status
+        - resetCode
+        - requestedAt
+
+    CreateResetRequestBody:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        type:
+          type: string
+          enum: [password, pin]
+      required:
+        - driverId
+        - type
+
+    PendingCount:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+        - count

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "./notification-bell";
 
 const NAV_ITEMS = [
   { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
@@ -33,10 +34,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <path d="M60 30 L40 55 L55 55 L40 80 L65 45 L45 45 L60 30 Z" fill="url(#logo-grad)"/>
             </svg>
           </div>
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center flex-1">
             <h1 className="font-display font-bold text-xl leading-none tracking-tight">GradoEats</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-sans mt-1">Manager</p>
           </div>
+          <NotificationBell />
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
@@ -89,6 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <span className="font-display font-bold text-lg">GradoEats</span>
           </div>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 overflow-y-auto relative z-10">
