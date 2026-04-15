@@ -85,6 +85,7 @@ export interface Driver {
   lat?: number | null;
   lng?: number | null;
   avatarUrl?: string | null;
+  lastActiveAt?: string | null;
   createdAt: string;
 }
 
@@ -120,6 +121,69 @@ export interface UpdateDriverLocationBody {
   lng: number;
 }
 
+export type ActivityAction =
+  (typeof ActivityAction)[keyof typeof ActivityAction];
+
+export const ActivityAction = {
+  order_assigned: "order_assigned",
+  order_picked_up: "order_picked_up",
+  order_delivered: "order_delivered",
+  order_cancelled: "order_cancelled",
+  status_online: "status_online",
+  status_offline: "status_offline",
+  status_available: "status_available",
+  location_updated: "location_updated",
+} as const;
+
+export interface Activity {
+  id: number;
+  driverId?: number | null;
+  driverName?: string | null;
+  orderId?: number | null;
+  orderNumber?: string | null;
+  action: ActivityAction;
+  details?: string | null;
+  createdAt: string;
+}
+
+export type AlertType = (typeof AlertType)[keyof typeof AlertType];
+
+export const AlertType = {
+  order_waiting_too_long: "order_waiting_too_long",
+  driver_inactive: "driver_inactive",
+  driver_offline_with_order: "driver_offline_with_order",
+} as const;
+
+export type AlertSeverity = (typeof AlertSeverity)[keyof typeof AlertSeverity];
+
+export const AlertSeverity = {
+  warning: "warning",
+  critical: "critical",
+} as const;
+
+export interface Alert {
+  id: string;
+  type: AlertType;
+  severity: AlertSeverity;
+  message: string;
+  driverId?: number | null;
+  driverName?: string | null;
+  orderId?: number | null;
+  orderNumber?: string | null;
+  minutesElapsed?: number | null;
+  createdAt: string;
+}
+
+export interface DriverTodayStats {
+  driverId: number;
+  todayDeliveries: number;
+  todayRevenue: number;
+  todayOnlineMinutes: number;
+  activeOrderId?: number | null;
+  activeOrderNumber?: string | null;
+  lastActivityAt?: string | null;
+}
+
 export interface DashboardSummary {
   totalOrders: number;
   pendingOrders: number;
@@ -130,6 +194,7 @@ export interface DashboardSummary {
   todayOrders: number;
   activeDrivers: number;
   averageRating: number;
+  alertCount: number;
 }
 
 export interface RevenueDay {
@@ -162,3 +227,12 @@ export const ListOrdersStatus = {
   delivered: "delivered",
   cancelled: "cancelled",
 } as const;
+
+export type GetDriverActivitiesParams = {
+  limit?: number;
+};
+
+export type ListActivitiesParams = {
+  limit?: number;
+  driverId?: number;
+};

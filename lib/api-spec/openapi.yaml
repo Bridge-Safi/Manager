@@ -9,13 +9,11 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: orders
-    description: Order management
   - name: drivers
-    description: Driver management
   - name: dashboard
-    description: Dashboard analytics
+  - name: activities
+  - name: alerts
 paths:
   /healthz:
     get:
@@ -93,7 +91,7 @@ paths:
     patch:
       operationId: updateOrder
       tags: [orders]
-      summary: Update an order (assign driver, update status)
+      summary: Update an order
       parameters:
         - name: id
           in: path
@@ -213,6 +211,91 @@ paths:
               schema:
                 $ref: "#/components/schemas/Driver"
 
+  /drivers/{id}/activities:
+    get:
+      operationId: getDriverActivities
+      tags: [drivers]
+      summary: Get activity timeline for a specific driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Driver activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+
+  /drivers/{id}/today:
+    get:
+      operationId: getDriverTodayStats
+      tags: [drivers]
+      summary: Get today's stats for a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Today's stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverTodayStats"
+
+  /activities:
+    get:
+      operationId: listActivities
+      tags: [activities]
+      summary: List recent activities (all drivers)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: driverId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List active alerts (waiting orders, inactive drivers)
+      responses:
+        "200":
+          description: Active alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -245,7 +328,7 @@ paths:
     get:
       operationId: getDriverStats
       tags: [dashboard]
-      summary: Stats per driver (deliveries, revenue, rating)
+      summary: Stats per driver
       responses:
         "200":
           description: Per-driver stats
@@ -385,6 +468,9 @@ components:
         avatarUrl:
           type: string
           nullable: true
+        lastActiveAt:
+          type: string
+          nullable: true
         createdAt:
           type: string
       required:
@@ -446,6 +532,99 @@ components:
         - lat
         - lng
 
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+        driverId:
+          type: integer
+          nullable: true
+        driverName:
+          type: string
+          nullable: true
+        orderId:
+          type: integer
+          nullable: true
+        orderNumber:
+          type: string
+          nullable: true
+        action:
+          type: string
+          enum: [order_assigned, order_picked_up, order_delivered, order_cancelled, status_online, status_offline, status_available, location_updated]
+        details:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - action
+        - createdAt
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [order_waiting_too_long, driver_inactive, driver_offline_with_order]
+        severity:
+          type: string
+          enum: [warning, critical]
+        message:
+          type: string
+        driverId:
+          type: integer
+          nullable: true
+        driverName:
+          type: string
+          nullable: true
+        orderId:
+          type: integer
+          nullable: true
+        orderNumber:
+          type: string
+          nullable: true
+        minutesElapsed:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - severity
+        - message
+        - createdAt
+
+    DriverTodayStats:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        todayDeliveries:
+          type: integer
+        todayRevenue:
+          type: number
+        todayOnlineMinutes:
+          type: integer
+        activeOrderId:
+          type: integer
+          nullable: true
+        activeOrderNumber:
+          type: string
+          nullable: true
+        lastActivityAt:
+          type: string
+          nullable: true
+      required:
+        - driverId
+        - todayDeliveries
+        - todayRevenue
+        - todayOnlineMinutes
+
     DashboardSummary:
       type: object
       properties:
@@ -467,6 +646,8 @@ components:
           type: integer
         averageRating:
           type: number
+        alertCount:
+          type: integer
       required:
         - totalOrders
         - pendingOrders
@@ -477,6 +658,7 @@ components:
         - todayOrders
         - activeDrivers
         - averageRating
+        - alertCount
 
     RevenueDay:
       type: object

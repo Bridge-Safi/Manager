@@ -93,7 +93,7 @@ export const GetOrderResponse = zod.object({
 });
 
 /**
- * @summary Update an order (assign driver, update status)
+ * @summary Update an order
  */
 export const UpdateOrderParams = zod.object({
   id: zod.coerce.number(),
@@ -146,6 +146,7 @@ export const ListDriversResponseItem = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
 export const ListDriversResponse = zod.array(ListDriversResponseItem);
@@ -181,6 +182,7 @@ export const GetDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
 
@@ -214,6 +216,7 @@ export const UpdateDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
 
@@ -242,8 +245,114 @@ export const UpdateDriverLocationResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
+
+/**
+ * @summary Get activity timeline for a specific driver
+ */
+export const GetDriverActivitiesParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const getDriverActivitiesQueryLimitDefault = 50;
+
+export const GetDriverActivitiesQueryParams = zod.object({
+  limit: zod.coerce.number().default(getDriverActivitiesQueryLimitDefault),
+});
+
+export const GetDriverActivitiesResponseItem = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  orderId: zod.number().nullish(),
+  orderNumber: zod.string().nullish(),
+  action: zod.enum([
+    "order_assigned",
+    "order_picked_up",
+    "order_delivered",
+    "order_cancelled",
+    "status_online",
+    "status_offline",
+    "status_available",
+    "location_updated",
+  ]),
+  details: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const GetDriverActivitiesResponse = zod.array(
+  GetDriverActivitiesResponseItem,
+);
+
+/**
+ * @summary Get today's stats for a driver
+ */
+export const GetDriverTodayStatsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDriverTodayStatsResponse = zod.object({
+  driverId: zod.number(),
+  todayDeliveries: zod.number(),
+  todayRevenue: zod.number(),
+  todayOnlineMinutes: zod.number(),
+  activeOrderId: zod.number().nullish(),
+  activeOrderNumber: zod.string().nullish(),
+  lastActivityAt: zod.string().nullish(),
+});
+
+/**
+ * @summary List recent activities (all drivers)
+ */
+export const listActivitiesQueryLimitDefault = 100;
+
+export const ListActivitiesQueryParams = zod.object({
+  limit: zod.coerce.number().default(listActivitiesQueryLimitDefault),
+  driverId: zod.coerce.number().optional(),
+});
+
+export const ListActivitiesResponseItem = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  orderId: zod.number().nullish(),
+  orderNumber: zod.string().nullish(),
+  action: zod.enum([
+    "order_assigned",
+    "order_picked_up",
+    "order_delivered",
+    "order_cancelled",
+    "status_online",
+    "status_offline",
+    "status_available",
+    "location_updated",
+  ]),
+  details: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem);
+
+/**
+ * @summary List active alerts (waiting orders, inactive drivers)
+ */
+export const ListAlertsResponseItem = zod.object({
+  id: zod.string(),
+  type: zod.enum([
+    "order_waiting_too_long",
+    "driver_inactive",
+    "driver_offline_with_order",
+  ]),
+  severity: zod.enum(["warning", "critical"]),
+  message: zod.string(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  orderId: zod.number().nullish(),
+  orderNumber: zod.string().nullish(),
+  minutesElapsed: zod.number().nullish(),
+  createdAt: zod.string(),
+});
+export const ListAlertsResponse = zod.array(ListAlertsResponseItem);
 
 /**
  * @summary Dashboard summary stats
@@ -258,6 +367,7 @@ export const GetDashboardSummaryResponse = zod.object({
   todayOrders: zod.number(),
   activeDrivers: zod.number(),
   averageRating: zod.number(),
+  alertCount: zod.number(),
 });
 
 /**
@@ -271,7 +381,7 @@ export const GetRevenueStatsResponseItem = zod.object({
 export const GetRevenueStatsResponse = zod.array(GetRevenueStatsResponseItem);
 
 /**
- * @summary Stats per driver (deliveries, revenue, rating)
+ * @summary Stats per driver
  */
 export const GetDriverStatsResponseItem = zod.object({
   driverId: zod.number(),

@@ -6,13 +6,21 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./activity";
+export * from "./activityAction";
+export * from "./alert";
+export * from "./alertSeverity";
+export * from "./alertType";
 export * from "./createDriverBody";
 export * from "./createOrderBody";
 export * from "./dashboardSummary";
 export * from "./driver";
 export * from "./driverStats";
 export * from "./driverStatus";
+export * from "./driverTodayStats";
+export * from "./getDriverActivitiesParams";
 export * from "./healthStatus";
+export * from "./listActivitiesParams";
 export * from "./listOrdersParams";
 export * from "./listOrdersStatus";
 export * from "./order";

@@ -8,6 +8,7 @@ import {
   UpdateOrderBody,
   GetOrderParams,
 } from "@workspace/api-zod";
+import { logActivity } from "../lib/log-activity";
 
 const router = Router();
 
@@ -134,11 +135,22 @@ router.patch("/:id", async (req, res) => {
     return;
   }
 
+  const orderId = paramParsed.data.id;
+  const existingRows = await db.select().from(ordersTable).where(eq(ordersTable.id, orderId));
+  const existing = existingRows[0];
+  if (!existing) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (bodyParsed.data.status !== undefined) updates.status = bodyParsed.data.status;
   if (bodyParsed.data.driverId !== undefined) updates.driverId = bodyParsed.data.driverId;
   if (bodyParsed.data.notes !== undefined) updates.notes = bodyParsed.data.notes;
 
+  const newDriverId = bodyParsed.data.driverId !== undefined ? bodyParsed.data.driverId : existing.driverId;
+
+  // Auto-set status to assigned when a driver is assigned
   if (bodyParsed.data.driverId !== undefined && bodyParsed.data.driverId !== null && !bodyParsed.data.status) {
     updates.status = "assigned";
   }
@@ -146,35 +158,80 @@ router.patch("/:id", async (req, res) => {
   const [updated] = await db
     .update(ordersTable)
     .set(updates)
-    .where(eq(ordersTable.id, paramParsed.data.id))
+    .where(eq(ordersTable.id, orderId))
     .returning();
-
-  if (!updated) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
 
   let driverName: string | null = null;
   if (updated.driverId) {
-    const driver = await db.select().from(driversTable).where(eq(driversTable.id, updated.driverId));
-    driverName = driver[0]?.name ?? null;
+    const drivers = await db.select().from(driversTable).where(eq(driversTable.id, updated.driverId));
+    driverName = drivers[0]?.name ?? null;
+  }
 
+  const finalStatus = (updates.status ?? existing.status) as string;
+
+  // Driver was just assigned
+  if (bodyParsed.data.driverId && bodyParsed.data.driverId !== existing.driverId) {
     await db
       .update(driversTable)
       .set({ status: "busy" })
-      .where(eq(driversTable.id, updated.driverId));
+      .where(eq(driversTable.id, bodyParsed.data.driverId));
+
+    await logActivity({
+      driverId: bodyParsed.data.driverId,
+      orderId: updated.id,
+      action: "order_assigned",
+      details: `Commande ${updated.orderNumber} assignée à ${driverName ?? "livreur"} (${updated.deliveryAddress})`,
+    });
   }
 
-  if (bodyParsed.data.status === "delivered" && updated.driverId) {
-    const order = await db.select().from(ordersTable).where(eq(ordersTable.id, updated.id));
-    await db
-      .update(driversTable)
-      .set({
-        totalDeliveries: sql`total_deliveries + 1`,
-        totalRevenue: sql`total_revenue + ${order[0]?.totalAmount ?? 0}`,
-        status: "available",
-      })
-      .where(eq(driversTable.id, updated.driverId));
+  // Status changed to in_delivery
+  if (bodyParsed.data.status === "in_delivery" && existing.status !== "in_delivery") {
+    await logActivity({
+      driverId: updated.driverId,
+      orderId: updated.id,
+      action: "order_picked_up",
+      details: `Commande ${updated.orderNumber} ramassée — en route vers ${updated.deliveryAddress}`,
+    });
+  }
+
+  // Status changed to delivered
+  if (bodyParsed.data.status === "delivered" && existing.status !== "delivered") {
+    if (updated.driverId) {
+      const orderToCount = await db.select().from(ordersTable).where(eq(ordersTable.id, updated.id));
+      const amount = orderToCount[0]?.totalAmount ?? 0;
+      await db
+        .update(driversTable)
+        .set({
+          totalDeliveries: sql`total_deliveries + 1`,
+          totalRevenue: sql`total_revenue + ${amount}`,
+          status: "available",
+        })
+        .where(eq(driversTable.id, updated.driverId));
+    }
+
+    await logActivity({
+      driverId: updated.driverId,
+      orderId: updated.id,
+      action: "order_delivered",
+      details: `Commande ${updated.orderNumber} livrée — ${updated.totalAmount} MAD encaissés`,
+    });
+  }
+
+  // Status changed to cancelled
+  if (bodyParsed.data.status === "cancelled" && existing.status !== "cancelled") {
+    if (updated.driverId) {
+      await db
+        .update(driversTable)
+        .set({ status: "available" })
+        .where(eq(driversTable.id, updated.driverId));
+    }
+
+    await logActivity({
+      driverId: updated.driverId,
+      orderId: updated.id,
+      action: "order_cancelled",
+      details: `Commande ${updated.orderNumber} annulée`,
+    });
   }
 
   res.json({

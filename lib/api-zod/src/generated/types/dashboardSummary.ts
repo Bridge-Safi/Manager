@@ -16,4 +16,5 @@ export interface DashboardSummary {
   todayOrders: number;
   activeDrivers: number;
   averageRating: number;
+  alertCount: number;
 }

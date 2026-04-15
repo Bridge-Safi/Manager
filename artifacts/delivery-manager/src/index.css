@@ -184,7 +184,8 @@
     @apply relative;
   }
   .glow-pulse::after {
-    @apply content-[''] absolute inset-0 -z-10 rounded-inherit opacity-0 transition-opacity duration-300;
+    @apply content-[''] absolute inset-0 -z-10 opacity-0 transition-opacity duration-300;
+    border-radius: inherit;
     box-shadow: 0 0 20px 2px hsla(var(--primary) / 0.5);
   }
   .glow-pulse:hover::after {

@@ -7,6 +7,7 @@ import Dashboard from "@/pages/dashboard";
 import OrdersPage from "@/pages/orders";
 import DriversPage from "@/pages/drivers";
 import AnalyticsPage from "@/pages/analytics";
+import SurveillancePage from "@/pages/surveillance";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/orders" component={OrdersPage} />
       <Route path="/drivers" component={DriversPage} />
+      <Route path="/surveillance" component={SurveillancePage} />
       <Route path="/analytics" component={AnalyticsPage} />
       <Route component={NotFound} />
     </Switch>

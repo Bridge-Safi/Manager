@@ -3,15 +3,30 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useGetDashboardSummary, useListOrders, useListDrivers } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useListOrders, useListDrivers, useListActivities } from "@workspace/api-client-react";
 import { OrderStatusBadge, DriverStatusBadge } from "@/components/status-badges";
 import { AssignDriverDialog } from "@/components/assign-driver-dialog";
 import { Order } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
-import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation } from "lucide-react";
+import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+
+function getActivityIcon(action: string) {
+  switch (action) {
+    case "order_delivered": return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+    case "order_assigned": return <Package className="w-4 h-4 text-blue-500" />;
+    case "order_picked_up": return <Bike className="w-4 h-4 text-orange-500" />;
+    case "order_cancelled": return <X className="w-4 h-4 text-red-500" />;
+    case "status_online":
+    case "status_available": return <Circle className="w-4 h-4 text-green-500" />;
+    case "status_offline": return <WifiOff className="w-4 h-4 text-zinc-500" />;
+    case "location_updated": return <Navigation className="w-4 h-4 text-primary" />;
+    default: return <Activity className="w-4 h-4 text-muted-foreground" />;
+  }
+}
 
 export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -34,6 +49,11 @@ export default function Dashboard() {
   const { data: drivers, isLoading: loadingDrivers } = useListDrivers({
     query: { refetchInterval: 5000 }
   });
+
+  const { data: activities } = useListActivities(
+    { limit: 8 },
+    { query: { refetchInterval: 5000 } }
+  );
 
   useEffect(() => {
     if (!fetchingSummary) {
@@ -60,7 +80,7 @@ export default function Dashboard() {
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           <KpiCard 
             title="Revenu du jour" 
             value={loadingSummary ? null : `${summary?.todayRevenue.toFixed(2)}`} 
@@ -88,6 +108,13 @@ export default function Dashboard() {
             unit={`/ ${drivers?.length || 0}`}
             icon={Users} 
             color="green"
+          />
+          <KpiCard 
+            title="Alertes" 
+            value={loadingSummary ? null : summary?.alertCount.toString()} 
+            icon={AlertTriangle} 
+            color={summary && summary.alertCount > 0 ? "red" : "green"}
+            alert={summary && summary.alertCount > 0}
           />
         </div>
 
@@ -223,6 +250,34 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Recent Activity Strip */}
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-display font-bold tracking-tight">Activité Récente</h2>
+            <Link href="/surveillance" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">Voir tout</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {activities?.map((activity) => (
+              <Card key={activity.id} className="glass hover:bg-white/5 transition-colors border-white/5">
+                <CardContent className="p-3 flex items-start gap-3">
+                  <div className="mt-0.5 p-1.5 rounded-lg bg-black/40 border border-white/5 shrink-0">
+                    {getActivityIcon(activity.action)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-sm truncate">{activity.driverName || 'Système'}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono whitespace-nowrap">
+                        {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true, locale: fr })}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{activity.details}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
 
       <AssignDriverDialog 
@@ -233,27 +288,29 @@ export default function Dashboard() {
   );
 }
 
-function KpiCard({ title, value, unit, icon: Icon, trend, alert, color }: { title: string, value: string | null, unit?: string, icon: any, trend?: string, alert?: boolean, color: 'orange' | 'blue' | 'yellow' | 'green' }) {
+function KpiCard({ title, value, unit, icon: Icon, trend, alert, color }: { title: string, value: string | null, unit?: string, icon: any, trend?: string, alert?: boolean, color: 'orange' | 'blue' | 'yellow' | 'green' | 'red' }) {
   const colorStyles = {
     orange: "border-t-primary shadow-[0_-2px_10px_-2px_rgba(255,90,31,0.2)]",
     blue: "border-t-blue-500 shadow-[0_-2px_10px_-2px_rgba(59,130,246,0.2)]",
     yellow: "border-t-yellow-500 shadow-[0_-2px_10px_-2px_rgba(234,179,8,0.2)]",
-    green: "border-t-green-500 shadow-[0_-2px_10px_-2px_rgba(34,197,94,0.2)]"
+    green: "border-t-green-500 shadow-[0_-2px_10px_-2px_rgba(34,197,94,0.2)]",
+    red: "border-t-red-500 shadow-[0_-2px_10px_-2px_rgba(239,68,68,0.2)]"
   };
 
   const iconStyles = {
     orange: "text-primary bg-primary/10",
     blue: "text-blue-500 bg-blue-500/10",
     yellow: "text-yellow-500 bg-yellow-500/10",
-    green: "text-green-500 bg-green-500/10"
+    green: "text-green-500 bg-green-500/10",
+    red: "text-red-500 bg-red-500/10"
   };
 
   return (
-    <Card className={cn("glass overflow-hidden relative group border-t-2", colorStyles[color], alert && "border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.15)]")}>
+    <Card className={cn("glass overflow-hidden relative group border-t-2", colorStyles[color], alert && color === 'red' ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]" : alert ? "border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.15)]" : "")}>
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider font-sans">{title}</h3>
-          <div className={cn("p-2.5 rounded-xl", alert ? "bg-yellow-500/20 text-yellow-500" : iconStyles[color])}>
+          <div className={cn("p-2.5 rounded-xl", alert && color === 'red' ? "bg-red-500/20 text-red-500" : alert ? "bg-yellow-500/20 text-yellow-500" : iconStyles[color])}>
             <Icon className={cn("w-5 h-5", alert && "animate-pulse")} />
           </div>
         </div>

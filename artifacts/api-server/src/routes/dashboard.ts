@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, ordersTable, driversTable } from "@workspace/db";
-import { eq, sql, gte } from "drizzle-orm";
+import { eq, sql, gte, and, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -27,6 +27,27 @@ router.get("/summary", async (_req, res) => {
     })
     .from(driversTable);
 
+  // Calculate alert count inline
+  let alertCount = 0;
+
+  // pending orders > 10 min
+  const pendingOrders = await db.select().from(ordersTable).where(eq(ordersTable.status, "pending"));
+  const now = new Date();
+  for (const order of pendingOrders) {
+    const mins = Math.floor((now.getTime() - new Date(order.createdAt).getTime()) / 60000);
+    if (mins >= 10) alertCount++;
+  }
+
+  // offline drivers with active orders
+  const offlineDrivers = await db.select({ id: driversTable.id }).from(driversTable).where(eq(driversTable.status, "offline"));
+  for (const driver of offlineDrivers) {
+    const activeOrders = await db
+      .select()
+      .from(ordersTable)
+      .where(and(eq(ordersTable.driverId, driver.id), inArray(ordersTable.status, ["assigned", "in_delivery"])));
+    alertCount += activeOrders.length;
+  }
+
   res.json({
     totalOrders: orderStats?.totalOrders ?? 0,
     pendingOrders: orderStats?.pendingOrders ?? 0,
@@ -37,6 +58,7 @@ router.get("/summary", async (_req, res) => {
     todayOrders: orderStats?.todayOrders ?? 0,
     activeDrivers: driverStats?.activeDrivers ?? 0,
     averageRating: Math.round((driverStats?.averageRating ?? 0) * 10) / 10,
+    alertCount,
   });
 });
 
