@@ -16,6 +16,7 @@ tags:
   - name: alerts
   - name: reset-requests
   - name: reviews
+  - name: restaurants
 paths:
   /healthz:
     get:
@@ -577,6 +578,91 @@ paths:
               schema:
                 $ref: "#/components/schemas/ResetRequest"
 
+  /restaurants:
+    get:
+      operationId: listRestaurants
+      tags: [restaurants]
+      summary: List all active restaurants
+      responses:
+        "200":
+          description: List of restaurants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Restaurant"
+    post:
+      operationId: createRestaurant
+      tags: [restaurants]
+      summary: Create a new restaurant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRestaurantBody"
+      responses:
+        "201":
+          description: Created restaurant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+
+  /restaurants/overview:
+    get:
+      operationId: getRestaurantsOverview
+      tags: [restaurants]
+      summary: All restaurants with live today stats
+      responses:
+        "200":
+          description: Restaurants with stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RestaurantOverview"
+
+  /restaurants/{id}:
+    patch:
+      operationId: updateRestaurant
+      tags: [restaurants]
+      summary: Update a restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRestaurantBody"
+      responses:
+        "200":
+          description: Updated restaurant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+    delete:
+      operationId: deleteRestaurant
+      tags: [restaurants]
+      summary: Deactivate a restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
 components:
   schemas:
     HealthStatus:
@@ -1057,6 +1143,137 @@ components:
         - rating
         - sentiment
         - createdAt
+
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [open, closed, busy]
+        avgPrepTime:
+          type: integer
+        cuisine:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        lastOrderAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - address
+        - status
+        - avgPrepTime
+        - isActive
+        - createdAt
+
+    RestaurantOverview:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [open, closed, busy]
+        avgPrepTime:
+          type: integer
+        cuisine:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        lastOrderAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        todayOrders:
+          type: integer
+        pendingCount:
+          type: integer
+        activeCount:
+          type: integer
+        deliveredCount:
+          type: integer
+        todayRevenue:
+          type: number
+      required:
+        - id
+        - name
+        - phone
+        - address
+        - status
+        - avgPrepTime
+        - isActive
+        - createdAt
+        - todayOrders
+        - pendingCount
+        - activeCount
+        - deliveredCount
+        - todayRevenue
+
+    CreateRestaurantBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        cuisine:
+          type: string
+        avgPrepTime:
+          type: integer
+        notes:
+          type: string
+      required:
+        - name
+        - phone
+        - address
+
+    UpdateRestaurantBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [open, closed, busy]
+        avgPrepTime:
+          type: integer
+        cuisine:
+          type: string
+        notes:
+          type: string
+        isActive:
+          type: boolean
 
     CreateReviewBody:
       type: object

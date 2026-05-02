@@ -630,3 +630,96 @@ export const MarkResetRequestCompleteResponse = zod.object({
   requestedAt: zod.string(),
   sentAt: zod.string().nullish(),
 });
+
+/**
+ * @summary List all active restaurants
+ */
+export const ListRestaurantsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  address: zod.string(),
+  status: zod.enum(["open", "closed", "busy"]),
+  avgPrepTime: zod.number(),
+  cuisine: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  isActive: zod.boolean(),
+  lastOrderAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListRestaurantsResponse = zod.array(ListRestaurantsResponseItem);
+
+/**
+ * @summary Create a new restaurant
+ */
+export const CreateRestaurantBody = zod.object({
+  name: zod.string(),
+  phone: zod.string(),
+  address: zod.string(),
+  cuisine: zod.string().optional(),
+  avgPrepTime: zod.number().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary All restaurants with live today stats
+ */
+export const GetRestaurantsOverviewResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  address: zod.string(),
+  status: zod.enum(["open", "closed", "busy"]),
+  avgPrepTime: zod.number(),
+  cuisine: zod.string().nullish(),
+  isActive: zod.boolean(),
+  lastOrderAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  todayOrders: zod.number(),
+  pendingCount: zod.number(),
+  activeCount: zod.number(),
+  deliveredCount: zod.number(),
+  todayRevenue: zod.number(),
+});
+export const GetRestaurantsOverviewResponse = zod.array(
+  GetRestaurantsOverviewResponseItem,
+);
+
+/**
+ * @summary Update a restaurant
+ */
+export const UpdateRestaurantParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateRestaurantBody = zod.object({
+  name: zod.string().optional(),
+  phone: zod.string().optional(),
+  address: zod.string().optional(),
+  status: zod.enum(["open", "closed", "busy"]).optional(),
+  avgPrepTime: zod.number().optional(),
+  cuisine: zod.string().optional(),
+  notes: zod.string().optional(),
+  isActive: zod.boolean().optional(),
+});
+
+export const UpdateRestaurantResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  address: zod.string(),
+  status: zod.enum(["open", "closed", "busy"]),
+  avgPrepTime: zod.number(),
+  cuisine: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  isActive: zod.boolean(),
+  lastOrderAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Deactivate a restaurant
+ */
+export const DeleteRestaurantParams = zod.object({
+  id: zod.coerce.number(),
+});

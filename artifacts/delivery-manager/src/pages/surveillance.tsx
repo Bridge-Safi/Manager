@@ -2,11 +2,28 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useListDrivers, useListActivities, useListAlerts } from "@workspace/api-client-react";
+import { useListDrivers, useListActivities, useListAlerts, useGetRestaurantsOverview } from "@workspace/api-client-react";
 import { DriverStatusBadge } from "@/components/status-badges";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Activity as ActivityIcon, AlertTriangle, AlertCircle, CheckCircle2, Navigation, Package, Bike, X, Circle, WifiOff, Clock } from "lucide-react";
+import {
+  Activity as ActivityIcon,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  Navigation,
+  Package,
+  Bike,
+  X,
+  Circle,
+  WifiOff,
+  Clock,
+  Store,
+  ShoppingBag,
+  ChefHat,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -35,6 +52,15 @@ function getActivityIcon(action: string) {
   }
 }
 
+function RestaurantStatusDot({ status }: { status: string }) {
+  const color = {
+    open: "bg-green-500",
+    busy: "bg-amber-500",
+    closed: "bg-zinc-500",
+  }[status] ?? "bg-zinc-500";
+  return <span className={cn("inline-block w-2 h-2 rounded-full shrink-0", color)} />;
+}
+
 export default function SurveillancePage() {
   const { data: drivers } = useListDrivers({
     query: { refetchInterval: 5000 }
@@ -49,15 +75,25 @@ export default function SurveillancePage() {
     query: { refetchInterval: 5000 }
   });
 
+  const { data: restaurants } = useGetRestaurantsOverview({
+    query: { refetchInterval: 8000 }
+  });
+
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     setLastUpdated(new Date());
-  }, [activities, alerts, drivers]);
+  }, [activities, alerts, drivers, restaurants]);
+
+  const availableDrivers = drivers?.filter(d => d.status === "available").length ?? 0;
+  const busyDrivers = drivers?.filter(d => d.status === "busy" || d.status === "delivering").length ?? 0;
+  const openRestaurants = restaurants?.filter(r => r.status === "open").length ?? 0;
+  const totalPendingOrders = restaurants?.reduce((s, r) => s + r.pendingCount, 0) ?? 0;
 
   return (
     <Layout>
       <div className="space-y-6 h-full flex flex-col">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl font-display font-bold tracking-tight flex items-center gap-3">
@@ -67,14 +103,48 @@ export default function SurveillancePage() {
               </span>
               Surveillance
             </h1>
-            <p className="text-muted-foreground mt-2">Suivi GPS et activités de la flotte en temps réel.</p>
+            <p className="text-muted-foreground mt-2">Suivi en temps réel — livreurs, restaurants et alertes.</p>
+          </div>
+          <div className="text-xs text-muted-foreground font-mono flex items-center gap-2">
+            <Clock className="w-3 h-3" />
+            Mis à jour {formatDistanceToNow(lastUpdated, { addSuffix: true, locale: fr })}
           </div>
         </div>
 
+        {/* Live KPI bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KpiPill
+            icon={<Users className="w-4 h-4 text-green-400" />}
+            label="Livreurs dispo"
+            value={availableDrivers}
+            color="text-green-400"
+          />
+          <KpiPill
+            icon={<Bike className="w-4 h-4 text-blue-400" />}
+            label="En livraison"
+            value={busyDrivers}
+            color="text-blue-400"
+          />
+          <KpiPill
+            icon={<Store className="w-4 h-4 text-primary" />}
+            label="Restaurants ouverts"
+            value={openRestaurants}
+            color="text-primary"
+          />
+          <KpiPill
+            icon={<ShoppingBag className="w-4 h-4 text-amber-400" />}
+            label="Commandes en attente"
+            value={totalPendingOrders}
+            color={totalPendingOrders > 5 ? "text-red-400" : "text-amber-400"}
+          />
+        </div>
+
+        {/* Main grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
+          {/* Left — Map + Restaurants */}
           <div className="xl:col-span-2 space-y-6 flex flex-col h-full">
             {/* Map Container */}
-            <Card className="glass border-white/5 shadow-2xl overflow-hidden flex-1 min-h-[450px] relative rounded-2xl flex flex-col">
+            <Card className="glass border-white/5 shadow-2xl overflow-hidden flex-1 min-h-[400px] relative rounded-2xl flex flex-col">
               <div className="absolute top-4 left-4 z-[400] bg-background/90 backdrop-blur border border-white/10 px-3 py-2 rounded-xl shadow-lg flex items-center gap-3 pointer-events-none">
                  <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -108,8 +178,57 @@ export default function SurveillancePage() {
                 </MapContainer>
               </div>
             </Card>
+
+            {/* Restaurants Live Panel */}
+            <Card className="glass border-white/5">
+              <CardHeader className="p-4 pb-2 border-b border-white/5 flex flex-row items-center justify-between">
+                <CardTitle className="font-display flex items-center gap-2 text-lg">
+                  <ChefHat className="w-5 h-5 text-primary" />
+                  Restaurants — État en direct
+                </CardTitle>
+                <Badge variant="outline" className="font-mono text-xs">
+                  {restaurants?.length ?? 0} actifs
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-0">
+                {!restaurants || restaurants.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    Aucun restaurant actif. Ajoutez-en depuis la page Restaurants.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-white/5">
+                    {restaurants.map((r) => (
+                      <div key={r.id} className="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors">
+                        <RestaurantStatusDot status={r.status} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm truncate">{r.name}</span>
+                            {r.cuisine && <span className="text-[10px] text-muted-foreground border border-white/10 px-1.5 py-0.5 rounded-full">{r.cuisine}</span>}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-1 mt-0.5">
+                            <Clock className="w-3 h-3" /> {r.avgPrepTime} min prépa
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <StatChip label="Attente" value={r.pendingCount} alert={r.pendingCount > 3} />
+                          <StatChip label="En cours" value={r.activeCount} />
+                          <StatChip label="Livrées" value={r.deliveredCount} positive />
+                          {r.todayRevenue > 0 && (
+                            <div className="text-right hidden sm:block">
+                              <div className="text-xs font-mono font-bold text-green-400">{r.todayRevenue.toFixed(0)} MAD</div>
+                              <div className="text-[10px] text-muted-foreground">CA today</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
+          {/* Right — Alerts + Activity */}
           <div className="space-y-6 flex flex-col h-full">
             {/* Alerts Panel */}
             <Card className={cn(
@@ -161,6 +280,43 @@ export default function SurveillancePage() {
               </CardContent>
             </Card>
 
+            {/* Drivers Live List */}
+            <Card className="glass border-white/5 shrink-0">
+              <CardHeader className="p-4 pb-2 border-b border-white/5 flex flex-row items-center justify-between">
+                <CardTitle className="font-display flex items-center gap-2 text-lg">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  Livreurs
+                </CardTitle>
+                <Badge variant="outline" className="font-mono">{drivers?.length ?? 0}</Badge>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[180px]">
+                  {!drivers || drivers.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted-foreground">Aucun livreur</div>
+                  ) : (
+                    <div className="divide-y divide-white/5">
+                      {drivers.map((driver) => (
+                        <div key={driver.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors">
+                          <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
+                            {driver.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{driver.name}</div>
+                            {driver.lastActiveAt && (
+                              <div className="text-[10px] text-muted-foreground font-mono">
+                                {formatDistanceToNow(new Date(driver.lastActiveAt), { addSuffix: true, locale: fr })}
+                              </div>
+                            )}
+                          </div>
+                          <DriverStatusBadge status={driver.status} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
             {/* Live Activity Feed */}
             <Card className="glass border-white/5 flex-1 flex flex-col min-h-0">
               <CardHeader className="p-4 pb-2 border-b border-white/5">
@@ -170,7 +326,7 @@ export default function SurveillancePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0 flex-1 min-h-0">
-                <ScrollArea className="h-[400px] w-full">
+                <ScrollArea className="h-[300px] w-full">
                   <div className="divide-y divide-white/5">
                     {!activities || activities.length === 0 ? (
                       <div className="p-6 text-center text-muted-foreground text-sm">
@@ -209,5 +365,51 @@ export default function SurveillancePage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+function KpiPill({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div className="glass border border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3">
+      {icon}
+      <div className="min-w-0">
+        <p className={cn("text-2xl font-display font-bold leading-none", color)}>{value}</p>
+        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatChip({
+  label,
+  value,
+  alert,
+  positive,
+}: {
+  label: string;
+  value: number;
+  alert?: boolean;
+  positive?: boolean;
+}) {
+  return (
+    <div className="text-center min-w-[40px]">
+      <div className={cn(
+        "text-sm font-display font-bold",
+        alert && value > 0 ? "text-red-400" : positive ? "text-green-400" : "text-foreground"
+      )}>
+        {value}
+      </div>
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+    </div>
   );
 }

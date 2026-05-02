@@ -7,6 +7,7 @@ import activitiesRouter from "./activities";
 import alertsRouter from "./alerts";
 import resetRequestsRouter from "./reset-requests";
 import reviewsRouter from "./reviews";
+import restaurantsRouter from "./restaurants";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use("/dashboard", dashboardRouter);
 router.use("/activities", activitiesRouter);
 router.use("/alerts", alertsRouter);
 router.use("/reset-requests", resetRequestsRouter);
+router.use("/restaurants", restaurantsRouter);
 
 export default router;

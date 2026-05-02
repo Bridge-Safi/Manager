@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye } from "lucide-react";
+import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./notification-bell";
 
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/surveillance", label: "Surveillance", icon: Eye },
   { href: "/orders", label: "Commandes", icon: ListOrdered },
   { href: "/drivers", label: "Livreurs", icon: Users },
+  { href: "/restaurants", label: "Restaurants", icon: Store },
   { href: "/analytics", label: "Analyses", icon: BarChart3 },
 ];
 

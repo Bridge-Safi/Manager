@@ -293,6 +293,85 @@ export interface Review {
   createdAt: string;
 }
 
+export type RestaurantStatus =
+  (typeof RestaurantStatus)[keyof typeof RestaurantStatus];
+
+export const RestaurantStatus = {
+  open: "open",
+  closed: "closed",
+  busy: "busy",
+} as const;
+
+export interface Restaurant {
+  id: number;
+  name: string;
+  phone: string;
+  address: string;
+  status: RestaurantStatus;
+  avgPrepTime: number;
+  cuisine?: string | null;
+  notes?: string | null;
+  isActive: boolean;
+  lastOrderAt?: string | null;
+  createdAt: string;
+}
+
+export type RestaurantOverviewStatus =
+  (typeof RestaurantOverviewStatus)[keyof typeof RestaurantOverviewStatus];
+
+export const RestaurantOverviewStatus = {
+  open: "open",
+  closed: "closed",
+  busy: "busy",
+} as const;
+
+export interface RestaurantOverview {
+  id: number;
+  name: string;
+  phone: string;
+  address: string;
+  status: RestaurantOverviewStatus;
+  avgPrepTime: number;
+  cuisine?: string | null;
+  isActive: boolean;
+  lastOrderAt?: string | null;
+  createdAt: string;
+  todayOrders: number;
+  pendingCount: number;
+  activeCount: number;
+  deliveredCount: number;
+  todayRevenue: number;
+}
+
+export interface CreateRestaurantBody {
+  name: string;
+  phone: string;
+  address: string;
+  cuisine?: string;
+  avgPrepTime?: number;
+  notes?: string;
+}
+
+export type UpdateRestaurantBodyStatus =
+  (typeof UpdateRestaurantBodyStatus)[keyof typeof UpdateRestaurantBodyStatus];
+
+export const UpdateRestaurantBodyStatus = {
+  open: "open",
+  closed: "closed",
+  busy: "busy",
+} as const;
+
+export interface UpdateRestaurantBody {
+  name?: string;
+  phone?: string;
+  address?: string;
+  status?: UpdateRestaurantBodyStatus;
+  avgPrepTime?: number;
+  cuisine?: string;
+  notes?: string;
+  isActive?: boolean;
+}
+
 export type CreateReviewBodySentiment =
   (typeof CreateReviewBodySentiment)[keyof typeof CreateReviewBodySentiment];
 

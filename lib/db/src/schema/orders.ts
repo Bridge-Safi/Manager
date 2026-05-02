@@ -2,6 +2,7 @@ import { pgTable, serial, text, real, integer, timestamp } from "drizzle-orm/pg-
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { driversTable } from "./drivers";
+import { restaurantsTable } from "./restaurants";
 
 export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
@@ -13,6 +14,7 @@ export const ordersTable = pgTable("orders", {
   totalAmount: real("total_amount").notNull(),
   status: text("status").notNull().default("pending"),
   driverId: integer("driver_id").references(() => driversTable.id),
+  restaurantId: integer("restaurant_id").references(() => restaurantsTable.id),
   sourceUrl: text("source_url"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
