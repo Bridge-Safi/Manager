@@ -114,13 +114,13 @@ export default function Dashboard() {
           />
           <KpiCard 
             title="Commandes" 
-            value={loadingSummary ? null : summary?.todayOrders.toString()} 
+            value={loadingSummary ? null : (summary?.todayOrders.toString() ?? null)} 
             icon={TrendingUp} 
             color="blue"
           />
           <KpiCard 
             title="En attente" 
-            value={loadingSummary ? null : summary?.pendingOrders.toString()} 
+            value={loadingSummary ? null : (summary?.pendingOrders.toString() ?? null)} 
             icon={Clock} 
             color="yellow"
             alert={summary && summary.pendingOrders > 0}
@@ -134,7 +134,7 @@ export default function Dashboard() {
           />
           <KpiCard 
             title="Alertes" 
-            value={loadingSummary ? null : summary?.alertCount.toString()} 
+            value={loadingSummary ? null : (summary?.alertCount.toString() ?? null)} 
             icon={AlertTriangle} 
             color={summary && summary.alertCount > 0 ? "red" : "green"}
             alert={summary && summary.alertCount > 0}

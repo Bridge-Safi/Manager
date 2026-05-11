@@ -9,6 +9,7 @@ import {
   GetOrderParams,
 } from "@workspace/api-zod";
 import { logActivity } from "../lib/log-activity";
+import { emitEvent } from "../lib/event-bus";
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -82,6 +83,15 @@ router.post("/", async (req, res) => {
       serviceType: parsed.data.serviceType ?? "nourriture",
     })
     .returning();
+
+  emitEvent("order:created", {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    deliveryAddress: order.deliveryAddress,
+    totalAmount: order.totalAmount,
+    status: order.status,
+  });
 
   res.status(201).json({
     ...order,
@@ -245,6 +255,14 @@ router.patch("/:id", async (req, res) => {
     });
   }
 
+  emitEvent("order:updated", {
+    id: updated.id,
+    orderNumber: updated.orderNumber,
+    status: updated.status,
+    driverId: updated.driverId,
+    driverName,
+  });
+
   res.json({
     ...updated,
     driverName,
@@ -307,6 +325,16 @@ router.post("/webhook", async (req, res) => {
     action: "order_assigned",
     orderId: order.id,
     details: `Nouvelle commande ${order.orderNumber} reçue depuis le site — ${customerName} (${deliveryAddress})`,
+  });
+
+  emitEvent("order:created", {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    deliveryAddress: order.deliveryAddress,
+    totalAmount: order.totalAmount,
+    status: order.status,
+    source: "webhook",
   });
 
   res.status(201).json({

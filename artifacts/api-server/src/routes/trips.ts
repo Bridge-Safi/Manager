@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, driversTable, ordersTable } from "@workspace/db";
 import { eq, and, desc, sql, gte } from "drizzle-orm";
+import { emitEvent } from "../lib/event-bus";
 
 const router = Router();
 
@@ -192,7 +193,15 @@ router.patch("/:id", async (req, res) => {
         lastActiveAt: new Date(),
       } as any)
       .where(eq(driversTable.id, driverId));
+    emitEvent("driver:updated", { driverId, status: "available" });
   }
+
+  emitEvent("order:updated", {
+    id: updated.id,
+    orderNumber: updated.orderNumber,
+    status: updated.status,
+    driverId: updated.driverId,
+  });
 
   res.json(makeTripFromOrder(updated));
 });
@@ -235,6 +244,14 @@ router.post("/:id/accept", async (req, res) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .set({ status: "busy", lastActiveAt: new Date() } as any)
     .where(eq(driversTable.id, driverId));
+
+  emitEvent("order:updated", {
+    id: updated.id,
+    orderNumber: updated.orderNumber,
+    status: "assigned",
+    driverId,
+  });
+  emitEvent("driver:updated", { driverId, status: "busy" });
 
   res.json(makeTripFromOrder(updated));
 });

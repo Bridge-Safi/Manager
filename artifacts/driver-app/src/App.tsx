@@ -6,6 +6,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { I18nProvider } from "./lib/i18n";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { ThemeProvider } from "./lib/theme";
+import { useRealtimeSync } from "./hooks/useRealtimeSync";
 import { registerServiceWorker } from "./lib/push";
 import { playAlarm, unlockAudio } from "./lib/alarm";
 import RoleSelection from "./pages/index";
@@ -58,6 +59,13 @@ function Router() {
   );
 }
 
+function RealtimeSync() {
+  const { livreur, chauffeur } = useAuth();
+  const driverId = livreur?.id ?? chauffeur?.id ?? 0;
+  useRealtimeSync(driverId);
+  return null;
+}
+
 function AlarmListener() {
   const [, navigate] = useLocation();
   useEffect(() => {
@@ -96,6 +104,7 @@ export default function App() {
             <TooltipProvider>
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <AlarmListener />
+                <RealtimeSync />
                 <Router />
               </WouterRouter>
               <Toaster />

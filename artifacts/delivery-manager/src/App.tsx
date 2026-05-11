@@ -2,6 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useRealtimeSync } from "@/hooks/use-realtime";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import OrdersPage from "@/pages/orders";
@@ -20,6 +21,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function RealtimeSync() {
+  useRealtimeSync();
+  return null;
+}
 
 function Router() {
   return (
@@ -42,6 +48,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <RealtimeSync />
           <Router />
         </WouterRouter>
         <Toaster />

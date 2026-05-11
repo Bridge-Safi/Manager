@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, driversTable, ordersTable } from "@workspace/db";
 import { eq, and, desc, sql, gte } from "drizzle-orm";
+import { emitEvent } from "../lib/event-bus";
 
 const router = Router();
 
@@ -160,6 +161,15 @@ router.post("/", async (req, res) => {
     })
     .returning();
 
+  emitEvent("delivery:created", {
+    id: created.id,
+    trackingNumber: created.orderNumber,
+    customerName: created.customerName,
+    deliveryAddress: created.deliveryAddress,
+    totalAmount: created.totalAmount,
+    status: "pending",
+  });
+
   res.status(201).json(formatDelivery(created));
 });
 
@@ -187,6 +197,13 @@ router.patch("/:id", async (req, res) => {
     .returning();
 
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+
+  emitEvent("delivery:updated", {
+    id: updated.id,
+    status: mapStatus(updated.status),
+    driverId: updated.driverId,
+  });
+
   res.json(formatDelivery(updated));
 });
 
@@ -213,6 +230,14 @@ router.post("/:id/accept", async (req, res) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .set({ status: "busy", lastActiveAt: new Date() } as any)
     .where(eq(driversTable.id, delivererId));
+
+  emitEvent("delivery:updated", {
+    id: updated.id,
+    status: "in_progress",
+    driverId: delivererId,
+  });
+
+  emitEvent("driver:updated", { driverId: delivererId, status: "busy" });
 
   res.json(formatDelivery(updated));
 });
@@ -258,7 +283,15 @@ router.post("/:id/confirm-delivered", async (req, res) => {
         lastActiveAt: new Date(),
       } as any)
       .where(eq(driversTable.id, delivererId));
+
+    emitEvent("driver:updated", { driverId: delivererId, status: "available" });
   }
+
+  emitEvent("delivery:updated", {
+    id: updated.id,
+    status: "delivered",
+    driverId: delivererId,
+  });
 
   res.json(formatDelivery(updated));
 });
