@@ -254,10 +254,17 @@ function ReviewsTab({ driverId }: { driverId: number }) {
 export default function DriversPage() {
   const queryClient = useQueryClient();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [activeTab, setActiveTab] = useState<"livreurs" | "chauffeurs">("livreurs");
 
-  const { data: drivers, isLoading } = useListDrivers({
+  const { data: allDrivers, isLoading } = useListDrivers({
     query: { refetchInterval: 10000 }
   });
+
+  const drivers = allDrivers?.filter(d =>
+    activeTab === "livreurs"
+      ? (d.services === "nourriture" || d.vehicleType !== "car")
+      : (d.services === "taxi" || d.vehicleType === "car")
+  );
 
   const { data: todayStats, isLoading: loadingStats } = useGetDriverTodayStats(
     selectedDriver?.id as number,
@@ -341,12 +348,44 @@ export default function DriversPage() {
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-display font-bold tracking-tight">Livreurs</h1>
-            <p className="text-muted-foreground mt-2">Gérez votre flotte et suivez leurs performances.</p>
+            <h1 className="text-4xl font-display font-bold tracking-tight">
+              {activeTab === "livreurs" ? "🛵 Livreurs" : "🚖 Chauffeurs"}
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              {activeTab === "livreurs"
+                ? "Livreurs de repas et commandes — flotte moto/vélo."
+                : "Chauffeurs taxi confort — flotte voiture."}
+            </p>
           </div>
           <Button className="glow-pulse bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-wide">
-            + Nouveau livreur
+            + {activeTab === "livreurs" ? "Nouveau livreur" : "Nouveau chauffeur"}
           </Button>
+        </div>
+
+        {/* Onglets Livreurs / Chauffeurs */}
+        <div className="flex gap-2 p-1 bg-black/40 border border-white/10 rounded-2xl w-fit">
+          <button
+            onClick={() => { setActiveTab("livreurs"); setSelectedDriver(null); }}
+            className={cn(
+              "px-5 py-2 rounded-xl text-sm font-semibold transition-all",
+              activeTab === "livreurs"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-muted-foreground hover:text-white hover:bg-white/5"
+            )}
+          >
+            🛵 Livreurs <span className="ml-1.5 text-xs opacity-70">({allDrivers?.filter(d => d.services === "nourriture" || d.vehicleType !== "car").length ?? 0})</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("chauffeurs"); setSelectedDriver(null); }}
+            className={cn(
+              "px-5 py-2 rounded-xl text-sm font-semibold transition-all",
+              activeTab === "chauffeurs"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-muted-foreground hover:text-white hover:bg-white/5"
+            )}
+          >
+            🚖 Chauffeurs <span className="ml-1.5 text-xs opacity-70">({allDrivers?.filter(d => d.services === "taxi" || d.vehicleType === "car").length ?? 0})</span>
+          </button>
         </div>
 
         {isLoading ? (
