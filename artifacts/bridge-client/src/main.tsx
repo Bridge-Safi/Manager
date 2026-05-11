@@ -795,6 +795,8 @@ function SignUpPage() {
         : await clerk.client.signUp.attemptEmailAddressVerification({ code });
       if (result.status === 'complete') {
         await clerk.setActive({ session: result.createdSessionId });
+        // Compter l'inscription
+        fetch('/api/stats/register', { method: 'POST' }).catch(() => {});
         navigate(basePath || '/');
       } else {
         setError(t.errCode);

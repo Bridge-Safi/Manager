@@ -5318,6 +5318,23 @@ export default function App() {
     return()=>clearTimeout(t);
   },[]);
 
+  // ── Compteur de visites — envoyé une fois par session ──────────────────────
+  useEffect(()=>{
+    try {
+      let sid = sessionStorage.getItem('bridge_session_id');
+      if (!sid) {
+        sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        sessionStorage.setItem('bridge_session_id', sid);
+        fetch('/api/stats/visit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sid, userAgent: navigator.userAgent }),
+        }).catch(() => {});
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Redirect to sign-in only after Clerk fully loaded + splash done + grace delay
   // Avoids false redirects while session is restoring from cookies/localStorage
   useEffect(()=>{

@@ -10,11 +10,22 @@ import { NewOrderDialog } from "@/components/new-order-dialog";
 import { Order } from "@workspace/api-client-react";
 import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 import { cn } from "@/lib/utils";
-import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle } from "lucide-react";
+import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle, Eye, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+
+function useSiteStats() {
+  const [stats, setStats] = useState<{ visits: number; registrations: number } | null>(null);
+  useEffect(() => {
+    const load = () => fetch('/api/stats').then(r => r.json()).then(setStats).catch(() => {});
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
+  return stats;
+}
 
 function getActivityIcon(action: string) {
   switch (action) {
@@ -34,6 +45,7 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [newOrderOpen, setNewOrderOpen] = useState(false);
+  const siteStats = useSiteStats();
 
   const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary } = useGetDashboardSummary({
     query: { refetchInterval: 5000 }
@@ -127,6 +139,52 @@ export default function Dashboard() {
             color={summary && summary.alertCount > 0 ? "red" : "green"}
             alert={summary && summary.alertCount > 0}
           />
+        </div>
+
+        {/* Stats site Bridge Safi */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <Card className="glass border-white/5 border-t-2 border-t-violet-500 shadow-[0_-2px_10px_-2px_rgba(139,92,246,0.2)]">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Visiteurs · Bridge Safi</h3>
+                <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-400">
+                  <Eye className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2">
+                {siteStats === null ? (
+                  <Skeleton className="h-10 w-24 bg-white/5" />
+                ) : (
+                  <div className="font-display text-4xl font-bold tracking-tighter">
+                    {siteStats.visits.toLocaleString('fr-FR')}
+                    <span className="text-lg text-muted-foreground font-sans font-normal ml-2">visites</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Sessions uniques · 24h de déduplication</p>
+            </CardContent>
+          </Card>
+          <Card className="glass border-white/5 border-t-2 border-t-emerald-500 shadow-[0_-2px_10px_-2px_rgba(16,185,129,0.2)]">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Inscrits · Bridge Safi</h3>
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2">
+                {siteStats === null ? (
+                  <Skeleton className="h-10 w-24 bg-white/5" />
+                ) : (
+                  <div className="font-display text-4xl font-bold tracking-tighter">
+                    {siteStats.registrations.toLocaleString('fr-FR')}
+                    <span className="text-lg text-muted-foreground font-sans font-normal ml-2">comptes</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Inscriptions vérifiées · email ou téléphone</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

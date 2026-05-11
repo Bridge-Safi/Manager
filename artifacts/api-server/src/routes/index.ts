@@ -15,6 +15,7 @@ import deliveriesRouter from "./deliveries";
 import deliverersRouter from "./deliverers";
 import tripsRouter from "./trips";
 import pushRouter from "./push";
+import statsRouter from "./stats";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use("/deliveries", deliveriesRouter);
 router.use("/deliverers", deliverersRouter);
 router.use("/trips", tripsRouter);
 router.use("/push", pushRouter);
+router.use("/stats", statsRouter);
 
 export default router;
