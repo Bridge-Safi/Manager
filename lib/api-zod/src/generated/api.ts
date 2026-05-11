@@ -156,6 +156,7 @@ export const ListDriversResponseItem = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -197,6 +198,7 @@ export const GetDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -236,6 +238,7 @@ export const UpdateDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -268,6 +271,7 @@ export const RecordDriverRefusalResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -300,6 +304,7 @@ export const WarnDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -332,6 +337,7 @@ export const ToggleBlockDriverResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -405,6 +411,7 @@ export const UpdateDriverLocationResponse = zod.object({
   lat: zod.number().nullish(),
   lng: zod.number().nullish(),
   avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
   totalRefusals: zod.number(),
   isBlocked: zod.boolean(),
   warnedAt: zod.string().nullish(),
@@ -1097,6 +1104,634 @@ export const GetClientsStatsResponse = zod.object({
   vip: zod.number(),
   uniqueCustomers: zod.number(),
   totalRevenue: zod.number(),
+});
+
+/**
+ * @summary List deliveries for a deliverer
+ */
+export const ListDeliveriesQueryParams = zod.object({
+  delivererId: zod.coerce.number().optional(),
+  status: zod
+    .enum(["pending", "in_progress", "delivered", "cancelled"])
+    .optional(),
+});
+
+export const ListDeliveriesResponseItem = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  delivererId: zod.number().nullish(),
+  delivererName: zod.string().nullish(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().nullish(),
+  totalAmount: zod.number(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  confirmCode: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  estimatedDeliveryTime: zod.string().nullish(),
+  priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListDeliveriesResponse = zod.array(ListDeliveriesResponseItem);
+
+/**
+ * @summary Create a new delivery
+ */
+export const CreateDeliveryBody = zod.object({
+  trackingNumber: zod.string().optional(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().optional(),
+  totalAmount: zod.number(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Get a delivery by ID
+ */
+export const GetDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDeliveryResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  delivererId: zod.number().nullish(),
+  delivererName: zod.string().nullish(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().nullish(),
+  totalAmount: zod.number(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  confirmCode: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  estimatedDeliveryTime: zod.string().nullish(),
+  priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Update delivery status
+ */
+export const UpdateDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDeliveryBody = zod.object({
+  status: zod
+    .enum(["pending", "in_progress", "delivered", "cancelled"])
+    .optional(),
+  delivererId: zod.number().nullish(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateDeliveryResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  delivererId: zod.number().nullish(),
+  delivererName: zod.string().nullish(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().nullish(),
+  totalAmount: zod.number(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  confirmCode: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  estimatedDeliveryTime: zod.string().nullish(),
+  priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Accept a pending delivery dispatch
+ */
+export const AcceptDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptDeliveryBody = zod.object({
+  delivererId: zod.number(),
+});
+
+export const AcceptDeliveryResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  delivererId: zod.number().nullish(),
+  delivererName: zod.string().nullish(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().nullish(),
+  totalAmount: zod.number(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  confirmCode: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  estimatedDeliveryTime: zod.string().nullish(),
+  priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Refuse a pending delivery dispatch
+ */
+export const RefuseDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RefuseDeliveryBody = zod.object({
+  delivererId: zod.number(),
+});
+
+export const RefuseDeliveryResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  delivererId: zod.number().nullish(),
+  delivererName: zod.string().nullish(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().nullish(),
+  totalAmount: zod.number(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  confirmCode: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  estimatedDeliveryTime: zod.string().nullish(),
+  priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Confirm delivery completion with optional code
+ */
+export const ConfirmDeliveredParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ConfirmDeliveredBody = zod.object({
+  delivererId: zod.number(),
+  confirmCode: zod.string().optional(),
+});
+
+export const ConfirmDeliveredResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  delivererId: zod.number().nullish(),
+  delivererName: zod.string().nullish(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string().nullish(),
+  totalAmount: zod.number(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  confirmCode: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  estimatedDeliveryTime: zod.string().nullish(),
+  priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Get delivery stats for a deliverer
+ */
+export const GetDeliveryStatsQueryParams = zod.object({
+  delivererId: zod.coerce.number(),
+});
+
+export const GetDeliveryStatsResponse = zod.object({
+  delivererId: zod.number(),
+  completedToday: zod.number(),
+  inProgressCount: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  averageRating: zod.number(),
+  currentStreak: zod.number(),
+});
+
+/**
+ * @summary Get pending dispatch for a deliverer
+ */
+export const GetMyPendingDispatchQueryParams = zod.object({
+  delivererId: zod.coerce.number(),
+});
+
+export const GetMyPendingDispatchResponse = zod.object({
+  hasPending: zod.boolean(),
+  delivery: zod
+    .object({
+      id: zod.number(),
+      trackingNumber: zod.string(),
+      delivererId: zod.number().nullish(),
+      delivererName: zod.string().nullish(),
+      customerName: zod.string(),
+      customerPhone: zod.string(),
+      pickupAddress: zod.string(),
+      deliveryAddress: zod.string(),
+      items: zod.string().nullish(),
+      totalAmount: zod.number(),
+      status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+      confirmCode: zod.string().nullish(),
+      notes: zod.string().nullish(),
+      estimatedDeliveryTime: zod.string().nullish(),
+      priority: zod.enum(["urgent", "normal", "low"]).nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    })
+    .nullish(),
+  secondsLeft: zod.number().optional(),
+  phase: zod.enum(["primary", "secondary", "tertiary"]).optional(),
+});
+
+/**
+ * @summary Get a deliverer (livreur) profile
+ */
+export const GetDelivererParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDelivererResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  vehicleType: zod.string(),
+  services: zod.string(),
+  status: zod.enum(["available", "busy", "offline"]),
+  rating: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Update a deliverer profile
+ */
+export const UpdateDelivererParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDelivererBody = zod.object({
+  name: zod.string().optional(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  vehicleType: zod.string().optional(),
+  services: zod.string().optional(),
+  status: zod.enum(["available", "busy", "offline"]).optional(),
+  rating: zod.number().optional(),
+  avatarUrl: zod.string().optional(),
+});
+
+export const UpdateDelivererResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  vehicleType: zod.string(),
+  services: zod.string(),
+  status: zod.enum(["available", "busy", "offline"]),
+  rating: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary List trips for a driver
+ */
+export const ListTripsQueryParams = zod.object({
+  driverId: zod.coerce.number().optional(),
+  status: zod
+    .enum(["scheduled", "in_progress", "completed", "cancelled"])
+    .optional(),
+});
+
+export const ListTripsResponseItem = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListTripsResponse = zod.array(ListTripsResponseItem);
+
+/**
+ * @summary Create a new trip
+ */
+export const CreateTripBody = zod.object({
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  notes: zod.string().optional(),
+  scheduledAt: zod.string().optional(),
+});
+
+/**
+ * @summary Get a trip by ID
+ */
+export const GetTripParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetTripResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Update trip status or details
+ */
+export const UpdateTripParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateTripBody = zod.object({
+  status: zod
+    .enum(["scheduled", "in_progress", "completed", "cancelled"])
+    .optional(),
+  driverId: zod.number().nullish(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateTripResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Mark passenger as picked up
+ */
+export const PickupPassengerParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const PickupPassengerBody = zod.object({
+  driverId: zod.number(),
+});
+
+export const PickupPassengerResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Accept a pending ride
+ */
+export const AcceptRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptRideBody = zod.object({
+  driverId: zod.number(),
+});
+
+export const AcceptRideResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Refuse a pending ride
+ */
+export const RefuseRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RefuseRideBody = zod.object({
+  driverId: zod.number(),
+});
+
+export const RefuseRideResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Send a counter offer for a ride
+ */
+export const CounterOfferRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CounterOfferRideBody = zod.object({
+  driverId: zod.number(),
+  offeredFare: zod.number(),
+});
+
+export const CounterOfferRideResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Get trip stats for a driver
+ */
+export const GetTripStatsQueryParams = zod.object({
+  driverId: zod.coerce.number(),
+});
+
+export const GetTripStatsResponse = zod.object({
+  driverId: zod.number(),
+  completedToday: zod.number(),
+  earningsToday: zod.number(),
+  totalKmToday: zod.number(),
+  averageFare: zod.number(),
+  totalTrips: zod.number(),
+  totalRevenue: zod.number(),
+});
+
+/**
+ * @summary Get pending ride for a driver (cascade dispatch)
+ */
+export const GetMyPendingRideQueryParams = zod.object({
+  driverId: zod.coerce.number(),
+});
+
+export const GetMyPendingRideResponse = zod.object({
+  hasPending: zod.boolean(),
+  trip: zod
+    .object({
+      id: zod.number(),
+      driverId: zod.number().nullish(),
+      driverName: zod.string().nullish(),
+      passengerName: zod.string(),
+      passengerPhone: zod.string(),
+      pickupAddress: zod.string(),
+      dropoffAddress: zod.string(),
+      fare: zod.number(),
+      offeredFare: zod.number().nullish(),
+      suggestedFare: zod.number().nullish(),
+      passengerOffer: zod.number().nullish(),
+      pricePerKm: zod.number().nullish(),
+      baseFare: zod.number().nullish(),
+      status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+      distance: zod.number().nullish(),
+      scheduledAt: zod.string().nullish(),
+      completedAt: zod.string().nullish(),
+      notes: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    })
+    .nullish(),
+  secondsLeft: zod.number().optional(),
+  phase: zod.enum(["cascade", "secondary", "tertiary"]).optional(),
 });
 
 /**

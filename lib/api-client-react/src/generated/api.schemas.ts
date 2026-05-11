@@ -122,6 +122,7 @@ export interface Driver {
   lat?: number | null;
   lng?: number | null;
   avatarUrl?: string | null;
+  photoUrl?: string | null;
   totalRefusals: number;
   isBlocked: boolean;
   warnedAt?: string | null;
@@ -558,6 +559,184 @@ export interface UpdateClientBody {
   isVip?: boolean;
 }
 
+export type DeliveryStatus =
+  (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
+
+export const DeliveryStatus = {
+  pending: "pending",
+  in_progress: "in_progress",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
+
+export type DeliveryPriority =
+  | (typeof DeliveryPriority)[keyof typeof DeliveryPriority]
+  | null;
+
+export const DeliveryPriority = {
+  urgent: "urgent",
+  normal: "normal",
+  low: "low",
+} as const;
+
+export interface Delivery {
+  id: number;
+  trackingNumber: string;
+  delivererId?: number | null;
+  delivererName?: string | null;
+  customerName: string;
+  customerPhone: string;
+  pickupAddress: string;
+  deliveryAddress: string;
+  items?: string | null;
+  totalAmount: number;
+  status: DeliveryStatus;
+  confirmCode?: string | null;
+  notes?: string | null;
+  estimatedDeliveryTime?: string | null;
+  priority?: DeliveryPriority;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDeliveryBody {
+  trackingNumber?: string;
+  customerName: string;
+  customerPhone: string;
+  pickupAddress: string;
+  deliveryAddress: string;
+  items?: string;
+  totalAmount: number;
+  notes?: string;
+}
+
+export type UpdateDeliveryBodyStatus =
+  (typeof UpdateDeliveryBodyStatus)[keyof typeof UpdateDeliveryBodyStatus];
+
+export const UpdateDeliveryBodyStatus = {
+  pending: "pending",
+  in_progress: "in_progress",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
+
+export interface UpdateDeliveryBody {
+  status?: UpdateDeliveryBodyStatus;
+  delivererId?: number | null;
+  notes?: string;
+}
+
+export interface DeliveryStats {
+  delivererId: number;
+  completedToday: number;
+  inProgressCount: number;
+  totalDeliveries: number;
+  totalRevenue: number;
+  averageRating: number;
+  currentStreak: number;
+}
+
+export type PendingDispatchPhase =
+  (typeof PendingDispatchPhase)[keyof typeof PendingDispatchPhase];
+
+export const PendingDispatchPhase = {
+  primary: "primary",
+  secondary: "secondary",
+  tertiary: "tertiary",
+} as const;
+
+export interface PendingDispatch {
+  hasPending: boolean;
+  delivery?: Delivery | null;
+  secondsLeft?: number;
+  phase?: PendingDispatchPhase;
+}
+
+export type TripStatus = (typeof TripStatus)[keyof typeof TripStatus];
+
+export const TripStatus = {
+  scheduled: "scheduled",
+  in_progress: "in_progress",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export interface Trip {
+  id: number;
+  driverId?: number | null;
+  driverName?: string | null;
+  passengerName: string;
+  passengerPhone: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  fare: number;
+  offeredFare?: number | null;
+  suggestedFare?: number | null;
+  passengerOffer?: number | null;
+  pricePerKm?: number | null;
+  baseFare?: number | null;
+  status: TripStatus;
+  distance?: number | null;
+  scheduledAt?: string | null;
+  completedAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTripBody {
+  passengerName: string;
+  passengerPhone: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  fare: number;
+  distance?: number;
+  notes?: string;
+  scheduledAt?: string;
+}
+
+export type UpdateTripBodyStatus =
+  (typeof UpdateTripBodyStatus)[keyof typeof UpdateTripBodyStatus];
+
+export const UpdateTripBodyStatus = {
+  scheduled: "scheduled",
+  in_progress: "in_progress",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export interface UpdateTripBody {
+  status?: UpdateTripBodyStatus;
+  driverId?: number | null;
+  notes?: string;
+}
+
+export interface TripStats {
+  driverId: number;
+  completedToday: number;
+  earningsToday: number;
+  totalKmToday: number;
+  averageFare: number;
+  totalTrips: number;
+  totalRevenue: number;
+}
+
+export type PendingRidePhase =
+  (typeof PendingRidePhase)[keyof typeof PendingRidePhase];
+
+export const PendingRidePhase = {
+  cascade: "cascade",
+  secondary: "secondary",
+  tertiary: "tertiary",
+} as const;
+
+export interface PendingRide {
+  hasPending: boolean;
+  trip?: Trip | null;
+  secondsLeft?: number;
+  phase?: PendingRidePhase;
+}
+
 export type ListOrdersParams = {
   status?: ListOrdersStatus;
   driverId?: number;
@@ -611,3 +790,79 @@ export const ListResetRequestsStatus = {
   sent: "sent",
   completed: "completed",
 } as const;
+
+export type ListDeliveriesParams = {
+  delivererId?: number;
+  status?: ListDeliveriesStatus;
+};
+
+export type ListDeliveriesStatus =
+  (typeof ListDeliveriesStatus)[keyof typeof ListDeliveriesStatus];
+
+export const ListDeliveriesStatus = {
+  pending: "pending",
+  in_progress: "in_progress",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
+
+export type AcceptDeliveryBody = {
+  delivererId: number;
+};
+
+export type RefuseDeliveryBody = {
+  delivererId: number;
+};
+
+export type ConfirmDeliveredBody = {
+  delivererId: number;
+  confirmCode?: string;
+};
+
+export type GetDeliveryStatsParams = {
+  delivererId: number;
+};
+
+export type GetMyPendingDispatchParams = {
+  delivererId: number;
+};
+
+export type ListTripsParams = {
+  driverId?: number;
+  status?: ListTripsStatus;
+};
+
+export type ListTripsStatus =
+  (typeof ListTripsStatus)[keyof typeof ListTripsStatus];
+
+export const ListTripsStatus = {
+  scheduled: "scheduled",
+  in_progress: "in_progress",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export type PickupPassengerBody = {
+  driverId: number;
+};
+
+export type AcceptRideBody = {
+  driverId: number;
+};
+
+export type RefuseRideBody = {
+  driverId: number;
+};
+
+export type CounterOfferRideBody = {
+  driverId: number;
+  offeredFare: number;
+};
+
+export type GetTripStatsParams = {
+  driverId: number;
+};
+
+export type GetMyPendingRideParams = {
+  driverId: number;
+};

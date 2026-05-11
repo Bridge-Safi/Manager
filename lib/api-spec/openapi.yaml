@@ -870,6 +870,510 @@ paths:
               schema:
                 $ref: "#/components/schemas/ClientsStats"
 
+  # ── Deliveries (livreur app) ──────────────────────────────────────────────
+  /deliveries:
+    get:
+      operationId: listDeliveries
+      tags: [deliveries]
+      summary: List deliveries for a deliverer
+      parameters:
+        - name: delivererId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, delivered, cancelled]
+      responses:
+        "200":
+          description: List of deliveries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delivery"
+    post:
+      operationId: createDelivery
+      tags: [deliveries]
+      summary: Create a new delivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDeliveryBody"
+      responses:
+        "201":
+          description: Created delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}:
+    get:
+      operationId: getDelivery
+      tags: [deliveries]
+      summary: Get a delivery by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+    patch:
+      operationId: updateDelivery
+      tags: [deliveries]
+      summary: Update delivery status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDeliveryBody"
+      responses:
+        "200":
+          description: Updated delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}/accept:
+    post:
+      operationId: acceptDelivery
+      tags: [deliveries]
+      summary: Accept a pending delivery dispatch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delivererId:
+                  type: integer
+              required:
+                - delivererId
+      responses:
+        "200":
+          description: Delivery accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}/refuse:
+    post:
+      operationId: refuseDelivery
+      tags: [deliveries]
+      summary: Refuse a pending delivery dispatch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delivererId:
+                  type: integer
+              required:
+                - delivererId
+      responses:
+        "200":
+          description: Delivery refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}/confirm-delivered:
+    post:
+      operationId: confirmDelivered
+      tags: [deliveries]
+      summary: Confirm delivery completion with optional code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delivererId:
+                  type: integer
+                confirmCode:
+                  type: string
+              required:
+                - delivererId
+      responses:
+        "200":
+          description: Delivery confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/stats:
+    get:
+      operationId: getDeliveryStats
+      tags: [deliveries]
+      summary: Get delivery stats for a deliverer
+      parameters:
+        - name: delivererId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delivery stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryStats"
+
+  /deliveries/pending-dispatch:
+    get:
+      operationId: getMyPendingDispatch
+      tags: [deliveries]
+      summary: Get pending dispatch for a deliverer
+      parameters:
+        - name: delivererId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pending dispatch info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingDispatch"
+
+  # ── Deliverers ────────────────────────────────────────────────────────────
+  /deliverers/{id}:
+    get:
+      operationId: getDeliverer
+      tags: [deliverers]
+      summary: Get a deliverer (livreur) profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deliverer profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+    patch:
+      operationId: updateDeliverer
+      tags: [deliverers]
+      summary: Update a deliverer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDriverBody"
+      responses:
+        "200":
+          description: Updated deliverer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  # ── Trips (chauffeur app) ─────────────────────────────────────────────────
+  /trips:
+    get:
+      operationId: listTrips
+      tags: [trips]
+      summary: List trips for a driver
+      parameters:
+        - name: driverId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [scheduled, in_progress, completed, cancelled]
+      responses:
+        "200":
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+    post:
+      operationId: createTrip
+      tags: [trips]
+      summary: Create a new trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTripBody"
+      responses:
+        "201":
+          description: Created trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}:
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get a trip by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Update trip status or details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTripBody"
+      responses:
+        "200":
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/pickup:
+    post:
+      operationId: pickupPassenger
+      tags: [trips]
+      summary: Mark passenger as picked up
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId:
+                  type: integer
+              required:
+                - driverId
+      responses:
+        "200":
+          description: Passenger picked up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/accept:
+    post:
+      operationId: acceptRide
+      tags: [trips]
+      summary: Accept a pending ride
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId:
+                  type: integer
+              required:
+                - driverId
+      responses:
+        "200":
+          description: Ride accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/refuse:
+    post:
+      operationId: refuseRide
+      tags: [trips]
+      summary: Refuse a pending ride
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId:
+                  type: integer
+              required:
+                - driverId
+      responses:
+        "200":
+          description: Ride refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/counter-offer:
+    post:
+      operationId: counterOfferRide
+      tags: [trips]
+      summary: Send a counter offer for a ride
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId:
+                  type: integer
+                offeredFare:
+                  type: number
+              required:
+                - driverId
+                - offeredFare
+      responses:
+        "200":
+          description: Counter offer sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/stats:
+    get:
+      operationId: getTripStats
+      tags: [trips]
+      summary: Get trip stats for a driver
+      parameters:
+        - name: driverId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripStats"
+
+  /trips/pending-ride:
+    get:
+      operationId: getMyPendingRide
+      tags: [trips]
+      summary: Get pending ride for a driver (cascade dispatch)
+      parameters:
+        - name: driverId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pending ride info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingRide"
+
   /clients/{id}:
     patch:
       operationId: updateClient
@@ -1047,6 +1551,9 @@ components:
           type: number
           nullable: true
         avatarUrl:
+          type: string
+          nullable: true
+        photoUrl:
           type: string
           nullable: true
         totalRefusals:
@@ -1883,3 +2390,289 @@ components:
           type: string
         isVip:
           type: boolean
+
+    # ── Delivery schemas ──────────────────────────────────────────────────────
+    Delivery:
+      type: object
+      properties:
+        id:
+          type: integer
+        trackingNumber:
+          type: string
+        delivererId:
+          type: integer
+          nullable: true
+        delivererName:
+          type: string
+          nullable: true
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        deliveryAddress:
+          type: string
+        items:
+          type: string
+          nullable: true
+        totalAmount:
+          type: number
+        status:
+          type: string
+          enum: [pending, in_progress, delivered, cancelled]
+        confirmCode:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        estimatedDeliveryTime:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          enum: [urgent, normal, low]
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - trackingNumber
+        - customerName
+        - customerPhone
+        - pickupAddress
+        - deliveryAddress
+        - totalAmount
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateDeliveryBody:
+      type: object
+      properties:
+        trackingNumber:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        deliveryAddress:
+          type: string
+        items:
+          type: string
+        totalAmount:
+          type: number
+        notes:
+          type: string
+      required:
+        - customerName
+        - customerPhone
+        - pickupAddress
+        - deliveryAddress
+        - totalAmount
+
+    UpdateDeliveryBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, in_progress, delivered, cancelled]
+        delivererId:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+
+    DeliveryStats:
+      type: object
+      properties:
+        delivererId:
+          type: integer
+        completedToday:
+          type: integer
+        inProgressCount:
+          type: integer
+        totalDeliveries:
+          type: integer
+        totalRevenue:
+          type: number
+        averageRating:
+          type: number
+        currentStreak:
+          type: integer
+      required:
+        - delivererId
+        - completedToday
+        - inProgressCount
+        - totalDeliveries
+        - totalRevenue
+        - averageRating
+        - currentStreak
+
+    PendingDispatch:
+      type: object
+      properties:
+        hasPending:
+          type: boolean
+        delivery:
+          $ref: "#/components/schemas/Delivery"
+          nullable: true
+        secondsLeft:
+          type: integer
+        phase:
+          type: string
+          enum: [primary, secondary, tertiary]
+      required:
+        - hasPending
+
+    # ── Trip schemas ──────────────────────────────────────────────────────────
+    Trip:
+      type: object
+      properties:
+        id:
+          type: integer
+        driverId:
+          type: integer
+          nullable: true
+        driverName:
+          type: string
+          nullable: true
+        passengerName:
+          type: string
+        passengerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        dropoffAddress:
+          type: string
+        fare:
+          type: number
+        offeredFare:
+          type: number
+          nullable: true
+        suggestedFare:
+          type: number
+          nullable: true
+        passengerOffer:
+          type: number
+          nullable: true
+        pricePerKm:
+          type: number
+          nullable: true
+        baseFare:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed, cancelled]
+        distance:
+          type: number
+          nullable: true
+        scheduledAt:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - passengerName
+        - passengerPhone
+        - pickupAddress
+        - dropoffAddress
+        - fare
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateTripBody:
+      type: object
+      properties:
+        passengerName:
+          type: string
+        passengerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        dropoffAddress:
+          type: string
+        fare:
+          type: number
+        distance:
+          type: number
+        notes:
+          type: string
+        scheduledAt:
+          type: string
+      required:
+        - passengerName
+        - passengerPhone
+        - pickupAddress
+        - dropoffAddress
+        - fare
+
+    UpdateTripBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed, cancelled]
+        driverId:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+
+    TripStats:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        completedToday:
+          type: integer
+        earningsToday:
+          type: number
+        totalKmToday:
+          type: number
+        averageFare:
+          type: number
+        totalTrips:
+          type: integer
+        totalRevenue:
+          type: number
+      required:
+        - driverId
+        - completedToday
+        - earningsToday
+        - totalKmToday
+        - averageFare
+        - totalTrips
+        - totalRevenue
+
+    PendingRide:
+      type: object
+      properties:
+        hasPending:
+          type: boolean
+        trip:
+          $ref: "#/components/schemas/Trip"
+          nullable: true
+        secondsLeft:
+          type: integer
+        phase:
+          type: string
+          enum: [cascade, secondary, tertiary]
+      required:
+        - hasPending

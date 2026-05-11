@@ -21,6 +21,7 @@ export interface Driver {
   lat?: number | null;
   lng?: number | null;
   avatarUrl?: string | null;
+  photoUrl?: string | null;
   totalRefusals: number;
   isBlocked: boolean;
   warnedAt?: string | null;

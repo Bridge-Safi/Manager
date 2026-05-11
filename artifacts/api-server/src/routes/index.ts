@@ -10,10 +10,16 @@ import reviewsRouter from "./reviews";
 import restaurantsRouter from "./restaurants";
 import playersRouter from "./players";
 import clientsRouter from "./clients";
+import authRouter from "./auth";
+import deliveriesRouter from "./deliveries";
+import deliverersRouter from "./deliverers";
+import tripsRouter from "./trips";
+import pushRouter from "./push";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use("/auth", authRouter);
 router.use("/orders", ordersRouter);
 router.use("/drivers", driversRouter);
 router.use("/drivers", reviewsRouter);
@@ -24,5 +30,9 @@ router.use("/reset-requests", resetRequestsRouter);
 router.use("/restaurants", restaurantsRouter);
 router.use("/players", playersRouter);
 router.use("/clients", clientsRouter);
+router.use("/deliveries", deliveriesRouter);
+router.use("/deliverers", deliverersRouter);
+router.use("/trips", tripsRouter);
+router.use("/push", pushRouter);
 
 export default router;
