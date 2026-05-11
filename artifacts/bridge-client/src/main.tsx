@@ -1484,7 +1484,7 @@ function GameIframe({ userId, lang, isAR }: { userId: string; lang: GameLang; is
         title="Safi Runner"
         onLoad={sendProfileToGame}
       />
-      {/* Right-side controls — back arrow + avatar stacked, near the game's player circle */}
+      {/* Right-side controls — back arrow + classement + avatar stacked */}
       <div style={{position:'absolute',right:10,bottom:120,zIndex:10,display:'flex',flexDirection:'column',alignItems:'center',gap:8,pointerEvents:'auto'}}>
         {/* Back button */}
         <button onClick={()=>navigate('/')}
@@ -1493,6 +1493,15 @@ function GameIframe({ userId, lang, isAR }: { userId: string; lang: GameLang; is
             color:'#4ADE80',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
             boxShadow:'0 2px 12px rgba(0,0,0,0.5)',lineHeight:1}}>
           ←
+        </button>
+        {/* Classement button */}
+        <button onClick={()=>navigate('/classement')}
+          title="Classement"
+          style={{width:36,height:36,borderRadius:'50%',border:'1.5px solid rgba(253,224,71,0.5)',
+            background:'rgba(4,17,10,0.75)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',
+            color:'#FDE047',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+            boxShadow:'0 2px 12px rgba(0,0,0,0.5)',lineHeight:1}}>
+          🏆
         </button>
         {/* Avatar */}
         {avatarSrc
@@ -3075,6 +3084,142 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, EBState> {
   }
 }
 
+// ─── CLASSEMENT PUBLIC ────────────────────────────────────────────────────────
+
+type LeaderboardPlayer = {
+  id: number;
+  pseudo: string;
+  phone: string;
+  profilePhoto?: string | null;
+  diamonds: number;
+  score: number;
+  gamesPlayed: number;
+  isOnline: boolean;
+  rank: number;
+};
+
+function ClassementPage() {
+  const [, navigate] = useLocation();
+  const [players, setPlayers] = useState<LeaderboardPlayer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const load = () => {
+    setLoading(true);
+    fetch('/api/players/leaderboard')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: LeaderboardPlayer[]) => { setPlayers(data); setLoading(false); setError(false); })
+      .catch(() => { setError(true); setLoading(false); });
+  };
+
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+  return (
+    <div style={{ minHeight: '100dvh', background: 'linear-gradient(180deg,#04110A 0%,#071C11 60%,#050F08 100%)', fontFamily: 'inherit', color: '#fff', padding: '0 0 40px' }}>
+      {/* Header */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'rgba(4,17,10,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(74,222,128,0.15)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => navigate('/game')}
+          style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid rgba(74,222,128,0.4)', background: 'rgba(255,255,255,0.05)', color: '#4ADE80', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          ←
+        </button>
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: 0, fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: '0.2em', textTransform: 'uppercase' }}>🦈 SAFI RUNNER</p>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, letterSpacing: '0.06em' }}>Classement 💎</p>
+        </div>
+        <button onClick={load} style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10, padding: '6px 12px', color: '#4ADE80', fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: '0.08em' }}>
+          ↺ Actualiser
+        </button>
+      </div>
+
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '20px 16px 0' }}>
+        {loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 60 }}>
+            <div style={{ width: 40, height: 40, border: '3px solid rgba(74,222,128,0.2)', borderTop: '3px solid #4ADE80', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700 }}>Chargement…</p>
+            <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+          </div>
+        )}
+
+        {error && !loading && (
+          <div style={{ textAlign: 'center', paddingTop: 60 }}>
+            <p style={{ color: '#F87171', fontSize: 14, fontWeight: 700 }}>Impossible de charger le classement</p>
+            <button onClick={load} style={{ marginTop: 14, padding: '10px 24px', borderRadius: 12, border: 'none', background: 'rgba(74,222,128,0.15)', color: '#4ADE80', fontSize: 13, fontWeight: 900, cursor: 'pointer' }}>Réessayer</button>
+          </div>
+        )}
+
+        {!loading && !error && players.length === 0 && (
+          <div style={{ textAlign: 'center', paddingTop: 60 }}>
+            <div style={{ fontSize: 56, marginBottom: 16 }}>🦈</div>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 600 }}>Aucun joueur classé pour le moment.</p>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 6 }}>Joue pour apparaître ici !</p>
+            <button onClick={() => navigate('/game')} style={{ marginTop: 20, padding: '12px 28px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#059669,#4ADE80)', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>
+              🎮 Jouer maintenant
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && players.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {players.map((p) => (
+              <div key={p.id}
+                style={{
+                  background: p.rank <= 3 ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)',
+                  border: p.rank === 1 ? '1.5px solid rgba(253,224,71,0.4)' : p.rank === 2 ? '1.5px solid rgba(203,213,225,0.35)' : p.rank === 3 ? '1.5px solid rgba(217,119,6,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 18, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                {/* Rank */}
+                <div style={{ width: 36, textAlign: 'center', flexShrink: 0 }}>
+                  {MEDAL[p.rank]
+                    ? <span style={{ fontSize: 26, lineHeight: 1 }}>{MEDAL[p.rank]}</span>
+                    : <span style={{ fontSize: 14, fontWeight: 900, fontFamily: 'monospace', color: 'rgba(255,255,255,0.35)' }}>#{p.rank}</span>
+                  }
+                </div>
+
+                {/* Avatar */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  {p.profilePhoto
+                    ? <img src={p.profilePhoto} alt={p.pseudo} style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(74,222,128,0.3)' }} />
+                    : <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(74,222,128,0.12)', border: '2px solid rgba(74,222,128,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#4ADE80' }}>
+                        {p.pseudo.charAt(0).toUpperCase()}
+                      </div>
+                  }
+                  {p.isOnline && (
+                    <span style={{ position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%', background: '#22C55E', border: '2px solid #04110A' }} />
+                  )}
+                </div>
+
+                {/* Name + stats */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontWeight: 900, fontSize: 15, letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.pseudo}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3 }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'monospace' }}>🎮 {p.gamesPlayed} parties</span>
+                  </div>
+                </div>
+
+                {/* Score + diamonds */}
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 900, fontFamily: 'monospace', color: '#FDE047', letterSpacing: '0.02em' }}>⭐ {p.score.toLocaleString()}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 700, fontFamily: 'monospace', color: '#67E8F9' }}>💎 {p.diamonds.toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+
+            <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', marginTop: 10 }}>
+              Mise à jour auto toutes les 30 secondes
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
 
@@ -3093,6 +3238,7 @@ function ClerkProviderWithRoutes() {
           <Route path="/sign-up/*?" component={SignUpPage} />
           <Route path="/forgot-password" component={ForgotPasswordPage} />
           <Route path="/game" component={GamePage} />
+          <Route path="/classement" component={ClassementPage} />
           <Route path="/assistant" component={BridgeAssistantPage} />
           <Route path="/dispatch" component={DispatchPage} />
           <Route path="/driver/:ref" component={DriverTrackerPage} />
