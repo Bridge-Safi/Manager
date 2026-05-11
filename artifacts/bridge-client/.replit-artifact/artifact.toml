@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/bridge-client/"
+title = "Bridge Safi — Site Client"
+version = "1.0.0"
+id = "artifacts/bridge-client"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/bridge-client/" ]
+localPort = 24492
+
+[services.development]
+run = "pnpm --filter @workspace/bridge-client run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bridge-client", "run", "build" ]
+publicDir = "artifacts/bridge-client/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24492"
+BASE_PATH = "/bridge-client/"
