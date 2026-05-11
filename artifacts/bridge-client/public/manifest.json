@@ -1,0 +1,45 @@
+{
+  "name": "Bridge Safi",
+  "short_name": "Bridge",
+  "description": "Livraison de repas, taxi confort et tabac à Safi, Maroc",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#011c15",
+  "theme_color": "#065F46",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["food", "lifestyle", "shopping"],
+  "id": "ma.safi-bridge.app",
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/logo_bridge_192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo_bridge_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/logo_bridge_512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Bridge Delivery",
+      "short_name": "Livraison",
+      "description": "Commander une livraison de repas",
+      "url": "/?service=delivery",
+      "icons": [{ "src": "/logo_delivery.jpeg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Bridge Taxi",
+      "short_name": "Taxi",
+      "description": "Réserver un taxi",
+      "url": "/?service=taxi",
+      "icons": [{ "src": "/logo_taxi.jpeg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Bridge Tabac",
+      "short_name": "Tabac",
+      "description": "Commander du tabac",
+      "url": "/?service=tabac",
+      "icons": [{ "src": "/bridge-tabac-logo.jpeg", "sizes": "96x96" }]
+    }
+  ]
+}
