@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRealtimeSync } from "@/hooks/use-realtime";
+import { useOrderNotifications } from "@/hooks/use-order-notifications";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import OrdersPage from "@/pages/orders";
@@ -24,6 +25,7 @@ const queryClient = new QueryClient({
 
 function RealtimeSync() {
   useRealtimeSync();
+  useOrderNotifications();
   return null;
 }
 
