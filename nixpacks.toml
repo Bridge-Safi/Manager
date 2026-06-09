@@ -1,7 +1,5 @@
-[build]
-builder = "nixpacks"
+[phases.install]
+cmds = ["npm install -g pnpm@10 --quiet", "pnpm install --no-frozen-lockfile"]
 
-[deploy]
-startCommand = "NODE_ENV=production node ./artifacts/api-server/dist/index.mjs"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 5
+[phases.build]
+cmds = ["pnpm run build"]
