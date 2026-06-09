@@ -146,7 +146,7 @@ export default function Dashboard() {
           <Card className="glass border-white/5 border-t-2 border-t-violet-500 shadow-[0_-2px_10px_-2px_rgba(139,92,246,0.2)]">
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Visiteurs · Bridge Safi</h3>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Visiteurs · Bridge Eats</h3>
                 <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-400">
                   <Eye className="w-5 h-5" />
                 </div>
@@ -167,7 +167,7 @@ export default function Dashboard() {
           <Card className="glass border-white/5 border-t-2 border-t-emerald-500 shadow-[0_-2px_10px_-2px_rgba(16,185,129,0.2)]">
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Inscrits · Bridge Safi</h3>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Inscrits · Bridge Eats</h3>
                 <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
                   <UserPlus className="w-5 h-5" />
                 </div>

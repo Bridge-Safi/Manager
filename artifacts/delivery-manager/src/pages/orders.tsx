@@ -20,9 +20,27 @@ import { toast } from "sonner";
 import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 import { cn } from "@/lib/utils";
 
+const SERVICE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
+  nourriture: { label: "Nourriture", emoji: "🍔", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+  taxi:       { label: "Taxi",       emoji: "🚖", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+  confort:    { label: "Confort",    emoji: "🚘", color: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
+  tabac:      { label: "Tabac",      emoji: "🚬", color: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30" },
+  fleur:      { label: "Fleurs",     emoji: "🌸", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+};
+
+function ServiceBadge({ type }: { type: string }) {
+  const s = SERVICE_LABELS[type] ?? { label: type, emoji: "📦", color: "bg-white/10 text-muted-foreground border-white/10" };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${s.color}`}>
+      {s.emoji} {s.label}
+    </span>
+  );
+}
+
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [newOrderOpen, setNewOrderOpen] = useState(false);
 
@@ -59,7 +77,8 @@ export default function OrdersPage() {
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerPhone.includes(searchTerm);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesService = serviceFilter === "all" || order.serviceType === serviceFilter;
+    return matchesSearch && matchesStatus && matchesService;
   });
 
   const pendingCount = pendingOrders?.length ?? 0;
@@ -182,19 +201,34 @@ export default function OrdersPage() {
                   className="pl-9 bg-black/40 border-white/10 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all font-mono text-sm h-11"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[200px] bg-black/40 border-white/10 h-11 focus:ring-primary/50">
-                  <SelectValue placeholder="Filtrer par statut" />
-                </SelectTrigger>
-                <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="pending">⏳ En attente</SelectItem>
-                  <SelectItem value="assigned">📦 Assignée</SelectItem>
-                  <SelectItem value="in_delivery">🛵 En livraison</SelectItem>
-                  <SelectItem value="delivered">✅ Livrée</SelectItem>
-                  <SelectItem value="cancelled">❌ Annulée</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 flex-wrap">
+                <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                  <SelectTrigger className="w-[170px] bg-black/40 border-white/10 h-11 focus:ring-primary/50">
+                    <SelectValue placeholder="Tous les services" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
+                    <SelectItem value="all">📦 Tous les services</SelectItem>
+                    <SelectItem value="nourriture">🍔 Nourriture</SelectItem>
+                    <SelectItem value="taxi">🚖 Taxi</SelectItem>
+                    <SelectItem value="confort">🚘 Confort</SelectItem>
+                    <SelectItem value="tabac">🚬 Tabac</SelectItem>
+                    <SelectItem value="fleur">🌸 Fleurs</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[185px] bg-black/40 border-white/10 h-11 focus:ring-primary/50">
+                    <SelectValue placeholder="Filtrer par statut" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="pending">⏳ En attente</SelectItem>
+                    <SelectItem value="assigned">📦 Assignée</SelectItem>
+                    <SelectItem value="in_delivery">🛵 En livraison</SelectItem>
+                    <SelectItem value="delivered">✅ Livrée</SelectItem>
+                    <SelectItem value="cancelled">❌ Annulée</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -203,6 +237,7 @@ export default function OrdersPage() {
                   <TableRow className="border-none hover:bg-transparent">
                     <TableHead className="w-[50px] font-sans text-xs tracking-wider text-muted-foreground/70 text-center">#</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Commande</TableHead>
+                    <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Service</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Client</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Adresse</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Articles</TableHead>
@@ -215,13 +250,13 @@ export default function OrdersPage() {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-40 text-center">
+                      <TableCell colSpan={10} className="h-40 text-center">
                         <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-40 text-center text-muted-foreground font-display text-lg">
+                      <TableCell colSpan={10} className="h-40 text-center text-muted-foreground font-display text-lg">
                         Aucune commande trouvée.
                       </TableCell>
                     </TableRow>
@@ -242,6 +277,9 @@ export default function OrdersPage() {
                           <div className="text-[11px] font-mono text-muted-foreground/70 mt-1">
                             {format(new Date(order.createdAt), "HH:mm")}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <ServiceBadge type={order.serviceType} />
                         </TableCell>
                         <TableCell>
                           <div className="font-medium text-foreground">{order.customerName}</div>

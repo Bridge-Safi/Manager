@@ -5337,6 +5337,27 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Sync joueur Safi Runner dès que l'utilisateur est connecté ────────────
+  const { getToken } = useAuth();
+  const syncedRef = useRef<string | null>(null);
+  useEffect(()=>{
+    if (!isLoaded || !isSignedIn || !user) return;
+    if (syncedRef.current === user.id) return;
+    syncedRef.current = user.id;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          fetch('/api/game/token', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          }).catch(() => {});
+        }
+      } catch {}
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isSignedIn, user?.id]);
+
   // Redirect to sign-in only after Clerk fully loaded + splash done + grace delay
   // Avoids false redirects while session is restoring from cookies/localStorage
   useEffect(()=>{
