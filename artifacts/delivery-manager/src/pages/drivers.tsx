@@ -254,7 +254,7 @@ function ReviewsTab({ driverId }: { driverId: number }) {
 export default function DriversPage() {
   const queryClient = useQueryClient();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
-  const [activeTab, setActiveTab] = useState<"livreurs" | "chauffeurs">("livreurs");
+  const [activeTab, setActiveTab] = useState<"livreurs" | "chauffeurs" | "moto_taxi">("livreurs");
 
   const { data: allDrivers, isLoading } = useListDrivers({
     query: { refetchInterval: 10000 }
@@ -262,8 +262,10 @@ export default function DriversPage() {
 
   const drivers = allDrivers?.filter(d =>
     activeTab === "livreurs"
-      ? (d.services === "nourriture" || d.vehicleType !== "car")
-      : (d.services === "taxi" || d.vehicleType === "car")
+      ? (d.services === "nourriture" && d.vehicleType !== "moto_taxi")
+      : activeTab === "chauffeurs"
+      ? (d.services === "taxi" || d.vehicleType === "car")
+      : (d.services === "moto_taxi" || d.vehicleType === "moto_taxi")
   );
 
   const { data: todayStats, isLoading: loadingStats } = useGetDriverTodayStats(
@@ -349,20 +351,22 @@ export default function DriversPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl font-display font-bold tracking-tight">
-              {activeTab === "livreurs" ? "🛵 Livreurs" : "🚖 Chauffeurs"}
+              {activeTab === "livreurs" ? "🛵 Livreurs" : activeTab === "chauffeurs" ? "🚖 Chauffeurs" : "🏍️ Moto-Taxi"}
             </h1>
             <p className="text-muted-foreground mt-2">
               {activeTab === "livreurs"
                 ? "Livreurs de repas et commandes — flotte moto/vélo."
-                : "Chauffeurs taxi confort — flotte voiture."}
+                : activeTab === "chauffeurs"
+                ? "Chauffeurs taxi confort — flotte voiture."
+                : "Chauffeurs moto-taxi — courses rapides en moto."}
             </p>
           </div>
           <Button className="glow-pulse bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-wide">
-            + {activeTab === "livreurs" ? "Nouveau livreur" : "Nouveau chauffeur"}
+            + {activeTab === "livreurs" ? "Nouveau livreur" : activeTab === "chauffeurs" ? "Nouveau chauffeur" : "Nouveau moto-taxi"}
           </Button>
         </div>
 
-        {/* Onglets Livreurs / Chauffeurs */}
+        {/* Onglets Livreurs / Chauffeurs / Moto-Taxi */}
         <div className="flex gap-2 p-1 bg-black/40 border border-white/10 rounded-2xl w-fit">
           <button
             onClick={() => { setActiveTab("livreurs"); setSelectedDriver(null); }}
@@ -373,7 +377,7 @@ export default function DriversPage() {
                 : "text-muted-foreground hover:text-white hover:bg-white/5"
             )}
           >
-            🛵 Livreurs <span className="ml-1.5 text-xs opacity-70">({allDrivers?.filter(d => d.services === "nourriture" || d.vehicleType !== "car").length ?? 0})</span>
+            🛵 Livreurs <span className="ml-1.5 text-xs opacity-70">({allDrivers?.filter(d => d.services === "nourriture" && d.vehicleType !== "moto_taxi").length ?? 0})</span>
           </button>
           <button
             onClick={() => { setActiveTab("chauffeurs"); setSelectedDriver(null); }}
@@ -385,6 +389,17 @@ export default function DriversPage() {
             )}
           >
             🚖 Chauffeurs <span className="ml-1.5 text-xs opacity-70">({allDrivers?.filter(d => d.services === "taxi" || d.vehicleType === "car").length ?? 0})</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("moto_taxi"); setSelectedDriver(null); }}
+            className={cn(
+              "px-5 py-2 rounded-xl text-sm font-semibold transition-all",
+              activeTab === "moto_taxi"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-muted-foreground hover:text-white hover:bg-white/5"
+            )}
+          >
+            🏍️ Moto-Taxi <span className="ml-1.5 text-xs opacity-70">({allDrivers?.filter(d => d.services === "moto_taxi" || d.vehicleType === "moto_taxi").length ?? 0})</span>
           </button>
         </div>
 

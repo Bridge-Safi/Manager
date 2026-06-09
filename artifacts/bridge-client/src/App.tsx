@@ -179,7 +179,7 @@ function DeliveryMap({onSet,onAddress,pin}:{
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 // URL du site livreur Bridge Logistique (où arrivent toutes les commandes)
-const DRIVER_APP_URL = '';
+const DRIVER_APP_URL = '/driver-app/';
 // ⬇ URL encodée dans le QR de paiement — à remplacer par le lien de votre banque
 const BRIDGE_QR_PAY_URL = 'https://safi-bridge.ma/pay';
 
