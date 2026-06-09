@@ -797,6 +797,16 @@ function SignUpPage() {
         await clerk.setActive({ session: result.createdSessionId });
         // Compter l'inscription
         fetch('/api/stats/register', { method: 'POST' }).catch(() => {});
+        // Créer la fiche joueur dans la DB (synchronisation Safi Runner)
+        try {
+          const token = await clerk.session?.getToken();
+          if (token) {
+            fetch('/api/game/token', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            }).catch(() => {});
+          }
+        } catch {}
         navigate(basePath || '/');
       } else {
         setError(t.errCode);

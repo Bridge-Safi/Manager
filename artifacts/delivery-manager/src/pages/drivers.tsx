@@ -4,9 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   useListDrivers,
   useUpdateDriver,
+  useCreateDriver,
   getListDriversQueryKey,
   getGetDashboardSummaryQueryKey,
   useGetDriverTodayStats,
@@ -255,6 +258,8 @@ export default function DriversPage() {
   const queryClient = useQueryClient();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [activeTab, setActiveTab] = useState<"livreurs" | "chauffeurs" | "moto_taxi">("livreurs");
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: "", phone: "", email: "" });
 
   const { data: allDrivers, isLoading } = useListDrivers({
     query: { refetchInterval: 10000 }
@@ -278,6 +283,37 @@ export default function DriversPage() {
     {},
     { query: { enabled: !!selectedDriver?.id } }
   );
+
+  const createDriverMutation = useCreateDriver({
+    mutation: {
+      onSuccess: (driver) => {
+        toast.success(`${driver.name} ajouté avec succès`);
+        queryClient.invalidateQueries({ queryKey: getListDriversQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+        setShowCreate(false);
+        setCreateForm({ name: "", phone: "", email: "" });
+      },
+      onError: () => toast.error("Erreur lors de la création du driver"),
+    },
+  });
+
+  const handleCreate = () => {
+    if (!createForm.name.trim() || !createForm.phone.trim()) {
+      toast.error("Nom et téléphone obligatoires");
+      return;
+    }
+    const vehicleType = activeTab === "chauffeurs" ? "car" : activeTab === "moto_taxi" ? "moto_taxi" : "moto";
+    const services = activeTab === "chauffeurs" ? "taxi" : activeTab === "moto_taxi" ? "moto_taxi" : "nourriture";
+    createDriverMutation.mutate({
+      data: {
+        name: createForm.name.trim(),
+        phone: createForm.phone.trim(),
+        email: createForm.email.trim() || undefined,
+        vehicleType,
+        services,
+      },
+    });
+  };
 
   const updateDriverMutation = useUpdateDriver({
     mutation: {
@@ -361,7 +397,7 @@ export default function DriversPage() {
                 : "Chauffeurs moto-taxi — courses rapides en moto."}
             </p>
           </div>
-          <Button className="glow-pulse bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-wide">
+          <Button onClick={() => setShowCreate(true)} className="glow-pulse bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-wide">
             + {activeTab === "livreurs" ? "Nouveau livreur" : activeTab === "chauffeurs" ? "Nouveau chauffeur" : "Nouveau moto-taxi"}
           </Button>
         </div>
@@ -783,6 +819,62 @@ export default function DriversPage() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
+
+      {/* ── Modal Nouveau Driver ── */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="glass border-white/10 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">
+              {activeTab === "livreurs" ? "🛵 Nouveau livreur" : activeTab === "chauffeurs" ? "🚖 Nouveau chauffeur" : "🏍️ Nouveau moto-taxi"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nom complet *</label>
+              <Input
+                placeholder="Ex: Youssef Amrani"
+                value={createForm.name}
+                onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
+                className="bg-black/30 border-white/10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Téléphone *</label>
+              <Input
+                placeholder="+212 6XX XXX XXX"
+                value={createForm.phone}
+                onChange={e => setCreateForm(f => ({ ...f, phone: e.target.value }))}
+                className="bg-black/30 border-white/10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email (optionnel)</label>
+              <Input
+                placeholder="email@bridge-safi.ma"
+                value={createForm.email}
+                onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))}
+                className="bg-black/30 border-white/10"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 border-white/10"
+                onClick={() => { setShowCreate(false); setCreateForm({ name: "", phone: "", email: "" }); }}
+              >
+                Annuler
+              </Button>
+              <Button
+                className="flex-1 bg-primary text-primary-foreground"
+                onClick={handleCreate}
+                disabled={createDriverMutation.isPending}
+              >
+                {createDriverMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
