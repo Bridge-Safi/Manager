@@ -10,6 +10,7 @@ import {
   UpdateDriverLocationBody,
 } from "@workspace/api-zod";
 import { logActivity } from "../lib/log-activity";
+import bcrypt from "bcryptjs";
 
 const router = Router();
 
@@ -24,6 +25,34 @@ router.get("/", async (_req, res) => {
   res.json(rows.map(formatDriver));
 });
 
+router.post("/auth", async (req, res) => {
+  const { email, password } = req.body ?? {};
+  if (!email || !password) {
+    res.status(400).json({ error: "Email et mot de passe requis" });
+    return;
+  }
+  const [driver] = await db
+    .select()
+    .from(driversTable)
+    .where(eq(driversTable.email, email as string))
+    .limit(1);
+
+  if (!driver || !driver.passwordHash) {
+    res.status(401).json({ error: "Identifiants invalides" });
+    return;
+  }
+  const valid = await bcrypt.compare(password as string, driver.passwordHash);
+  if (!valid) {
+    res.status(401).json({ error: "Identifiants invalides" });
+    return;
+  }
+  if (driver.isBlocked) {
+    res.status(403).json({ error: "Compte bloqué — contactez le manager" });
+    return;
+  }
+  res.json(formatDriver(driver));
+});
+
 router.post("/", async (req, res) => {
   const parsed = CreateDriverBody.safeParse(req.body);
   if (!parsed.success) {
@@ -31,10 +60,23 @@ router.post("/", async (req, res) => {
     return;
   }
 
+  const { password, ...driverData } = parsed.data as typeof parsed.data & { password?: string };
+
+  let passwordHash: string | undefined;
+  let plainPassword: string | undefined;
+
+  if (password && password.trim().length > 0) {
+    plainPassword = password.trim();
+  } else {
+    plainPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+  }
+  passwordHash = await bcrypt.hash(plainPassword, 10);
+
   const [driver] = await db
     .insert(driversTable)
     .values({
-      ...parsed.data,
+      ...driverData,
+      passwordHash,
       status: "available",
       rating: 5.0,
       totalDeliveries: 0,
@@ -48,7 +90,7 @@ router.post("/", async (req, res) => {
     details: `${driver.name} a rejoint la flotte`,
   });
 
-  res.status(201).json(formatDriver(driver));
+  res.status(201).json({ ...formatDriver(driver), plainPassword });
 });
 
 router.get("/:id", async (req, res) => {

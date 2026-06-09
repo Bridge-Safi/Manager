@@ -37,6 +37,8 @@ export * from "./deliveryPriority";
 export * from "./deliveryStats";
 export * from "./deliveryStatus";
 export * from "./driver";
+export * from "./driverAuth401";
+export * from "./driverAuthBody";
 export * from "./driverStats";
 export * from "./driverStatus";
 export * from "./driverTodayStats";

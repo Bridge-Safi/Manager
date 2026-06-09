@@ -259,7 +259,8 @@ export default function DriversPage() {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [activeTab, setActiveTab] = useState<"livreurs" | "chauffeurs" | "moto_taxi">("livreurs");
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", phone: "", email: "" });
+  const [createForm, setCreateForm] = useState({ name: "", phone: "", email: "", password: "" });
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; name: string } | null>(null);
 
   const { data: allDrivers, isLoading } = useListDrivers({
     query: { refetchInterval: 10000 }
@@ -286,12 +287,17 @@ export default function DriversPage() {
 
   const createDriverMutation = useCreateDriver({
     mutation: {
-      onSuccess: (driver) => {
-        toast.success(`${driver.name} ajouté avec succès`);
+      onSuccess: (data) => {
+        const driver = data as typeof data & { plainPassword?: string };
         queryClient.invalidateQueries({ queryKey: getListDriversQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
         setShowCreate(false);
-        setCreateForm({ name: "", phone: "", email: "" });
+        setCreateForm({ name: "", phone: "", email: "", password: "" });
+        if (driver.email && driver.plainPassword) {
+          setCreatedCredentials({ email: driver.email, password: driver.plainPassword, name: driver.name });
+        } else {
+          toast.success(`${driver.name} ajouté avec succès`);
+        }
       },
       onError: () => toast.error("Erreur lors de la création du driver"),
     },
@@ -302,13 +308,18 @@ export default function DriversPage() {
       toast.error("Nom et téléphone obligatoires");
       return;
     }
+    if (!createForm.email.trim()) {
+      toast.error("L'email est obligatoire pour créer un compte");
+      return;
+    }
     const vehicleType = activeTab === "chauffeurs" ? "car" : activeTab === "moto_taxi" ? "moto_taxi" : "moto";
     const services = activeTab === "chauffeurs" ? "taxi" : activeTab === "moto_taxi" ? "moto_taxi" : "nourriture";
     createDriverMutation.mutate({
       data: {
         name: createForm.name.trim(),
         phone: createForm.phone.trim(),
-        email: createForm.email.trim() || undefined,
+        email: createForm.email.trim(),
+        password: createForm.password.trim() || undefined,
         vehicleType,
         services,
       },
@@ -848,19 +859,31 @@ export default function DriversPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email (optionnel)</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email *</label>
               <Input
-                placeholder="email@bridge-safi.ma"
+                placeholder="prenom.nom@bridge-safi.ma"
                 value={createForm.email}
                 onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))}
                 className="bg-black/30 border-white/10"
+                type="email"
               />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mot de passe</label>
+              <Input
+                placeholder="Laisser vide = auto-généré"
+                value={createForm.password}
+                onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))}
+                className="bg-black/30 border-white/10"
+                type="text"
+              />
+              <p className="text-[10px] text-muted-foreground">Si vide, un mot de passe sera généré automatiquement</p>
             </div>
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
                 className="flex-1 border-white/10"
-                onClick={() => { setShowCreate(false); setCreateForm({ name: "", phone: "", email: "" }); }}
+                onClick={() => { setShowCreate(false); setCreateForm({ name: "", phone: "", email: "", password: "" }); }}
               >
                 Annuler
               </Button>
@@ -873,6 +896,57 @@ export default function DriversPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!createdCredentials} onOpenChange={() => setCreatedCredentials(null)}>
+        <DialogContent className="bg-[#0f0f0f] border border-green-500/30 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-green-400 flex items-center gap-2">
+              <span>✅</span> Compte créé avec succès
+            </DialogTitle>
+          </DialogHeader>
+          {createdCredentials && (
+            <div className="space-y-4 mt-2">
+              <p className="text-sm text-muted-foreground">
+                Communiquez ces identifiants à <span className="text-white font-semibold">{createdCredentials.name}</span> pour qu'il puisse se connecter à l'app livreur.
+              </p>
+              <div className="bg-black/50 border border-white/10 rounded-lg p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Email</p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-amber-400 text-sm font-mono flex-1">{createdCredentials.email}</code>
+                    <button
+                      className="text-xs text-muted-foreground hover:text-white transition-colors px-2 py-1 rounded border border-white/10"
+                      onClick={() => { navigator.clipboard.writeText(createdCredentials.email); toast.success("Email copié"); }}
+                    >Copier</button>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Mot de passe</p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-green-400 text-sm font-mono flex-1">{createdCredentials.password}</code>
+                    <button
+                      className="text-xs text-muted-foreground hover:text-white transition-colors px-2 py-1 rounded border border-white/10"
+                      onClick={() => { navigator.clipboard.writeText(createdCredentials.password); toast.success("Mot de passe copié"); }}
+                    >Copier</button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-amber-500/80">⚠️ Ce mot de passe ne sera plus affiché. Notez-le ou envoyez-le au livreur maintenant.</p>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => {
+                  const text = `Identifiants app livreur:\nEmail: ${createdCredentials.email}\nMot de passe: ${createdCredentials.password}`;
+                  navigator.clipboard.writeText(text);
+                  toast.success("Identifiants copiés !");
+                  setCreatedCredentials(null);
+                }}
+              >
+                📋 Copier les deux et fermer
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>

@@ -172,9 +172,45 @@ export const CreateDriverBody = zod.object({
   name: zod.string(),
   phone: zod.string(),
   email: zod.string().optional(),
+  password: zod
+    .string()
+    .optional()
+    .describe(
+      "Mot de passe initial du livreur (en clair, sera hashé côté serveur)",
+    ),
   vehicleType: zod.string(),
   services: zod.string().optional(),
   avatarUrl: zod.string().optional(),
+});
+
+/**
+ * @summary Authenticate a driver with email and password
+ */
+export const DriverAuthBody = zod.object({
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const DriverAuthResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  vehicleType: zod.string(),
+  services: zod.string(),
+  status: zod.enum(["available", "busy", "offline"]),
+  rating: zod.number(),
+  totalDeliveries: zod.number(),
+  totalRevenue: zod.number(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  avatarUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  totalRefusals: zod.number(),
+  isBlocked: zod.boolean(),
+  warnedAt: zod.string().nullish(),
+  lastActiveAt: zod.string().nullish(),
+  createdAt: zod.string(),
 });
 
 /**

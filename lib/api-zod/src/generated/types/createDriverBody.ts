@@ -10,6 +10,8 @@ export interface CreateDriverBody {
   name: string;
   phone: string;
   email?: string;
+  /** Mot de passe initial du livreur (en clair, sera hashé côté serveur) */
+  password?: string;
   vehicleType: string;
   services?: string;
   avatarUrl?: string;

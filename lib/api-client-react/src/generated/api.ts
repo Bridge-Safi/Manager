@@ -40,6 +40,8 @@ import type {
   Delivery,
   DeliveryStats,
   Driver,
+  DriverAuth401,
+  DriverAuthBody,
   DriverStats,
   DriverTodayStats,
   GetDeliveryStatsParams,
@@ -678,6 +680,92 @@ export const useCreateDriver = <
   TContext
 > => {
   return useMutation(getCreateDriverMutationOptions(options));
+};
+
+/**
+ * @summary Authenticate a driver with email and password
+ */
+export const getDriverAuthUrl = () => {
+  return `/api/drivers/auth`;
+};
+
+export const driverAuth = async (
+  driverAuthBody: DriverAuthBody,
+  options?: RequestInit,
+): Promise<Driver> => {
+  return customFetch<Driver>(getDriverAuthUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(driverAuthBody),
+  });
+};
+
+export const getDriverAuthMutationOptions = <
+  TError = ErrorType<DriverAuth401>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof driverAuth>>,
+    TError,
+    { data: BodyType<DriverAuthBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof driverAuth>>,
+  TError,
+  { data: BodyType<DriverAuthBody> },
+  TContext
+> => {
+  const mutationKey = ["driverAuth"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof driverAuth>>,
+    { data: BodyType<DriverAuthBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return driverAuth(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DriverAuthMutationResult = NonNullable<
+  Awaited<ReturnType<typeof driverAuth>>
+>;
+export type DriverAuthMutationBody = BodyType<DriverAuthBody>;
+export type DriverAuthMutationError = ErrorType<DriverAuth401>;
+
+/**
+ * @summary Authenticate a driver with email and password
+ */
+export const useDriverAuth = <
+  TError = ErrorType<DriverAuth401>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof driverAuth>>,
+    TError,
+    { data: BodyType<DriverAuthBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof driverAuth>>,
+  TError,
+  { data: BodyType<DriverAuthBody> },
+  TContext
+> => {
+  return useMutation(getDriverAuthMutationOptions(options));
 };
 
 /**

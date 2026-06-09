@@ -38,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </svg>
           </div>
           <div className="flex flex-col justify-center flex-1">
-            <h1 className="font-display font-bold text-xl leading-none tracking-tight">Grado</h1>
+            <h1 className="font-display font-bold text-xl leading-none tracking-tight">Grado & Bridge</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-sans mt-1">Manager</p>
           </div>
           <NotificationBell />
@@ -92,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <path d="M60 30 L40 55 L55 55 L40 80 L65 45 L45 45 L60 30 Z" fill="#FF5A1F"/>
               </svg>
             </div>
-            <span className="font-display font-bold text-lg">Grado Manager</span>
+            <span className="font-display font-bold text-lg">Grado & Bridge Manager</span>
           </div>
           <NotificationBell />
         </header>

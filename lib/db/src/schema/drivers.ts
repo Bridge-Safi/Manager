@@ -21,6 +21,7 @@ export const driversTable = pgTable("drivers", {
   services: text("services").notNull().default("nourriture"),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  passwordHash: text("password_hash"),
 });
 
 export const insertDriverSchema = createInsertSchema(driversTable).omit({ id: true, createdAt: true });

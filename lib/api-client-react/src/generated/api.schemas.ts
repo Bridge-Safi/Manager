@@ -134,6 +134,8 @@ export interface CreateDriverBody {
   name: string;
   phone: string;
   email?: string;
+  /** Mot de passe initial du livreur (en clair, sera hashé côté serveur) */
+  password?: string;
   vehicleType: string;
   services?: string;
   avatarUrl?: string;
@@ -752,6 +754,15 @@ export const ListOrdersStatus = {
   delivered: "delivered",
   cancelled: "cancelled",
 } as const;
+
+export type DriverAuthBody = {
+  email: string;
+  password: string;
+};
+
+export type DriverAuth401 = {
+  error?: string;
+};
 
 export type RecordDriverRefusalBody = {
   orderId?: number | null;
