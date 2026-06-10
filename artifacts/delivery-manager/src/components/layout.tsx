@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, Store, Gamepad2, UserCircle, Send } from "lucide-react";
+import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, Store, Gamepad2, UserCircle, Send, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./notification-bell";
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/safi-runner", label: "Safi Runner", icon: Gamepad2 },
   { href: "/analytics", label: "Analyses", icon: BarChart3 },
   { href: "/announcements", label: "Email & Annonces", icon: Send },
+  { href: "/grado-site", label: "Grado · Site", icon: Globe },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -24,24 +25,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <aside className="w-[260px] border-r border-white/5 bg-gradient-to-b from-sidebar to-background flex-col hidden md:flex shrink-0 z-20 shadow-2xl relative">
         <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-primary/0 via-primary/20 to-primary/0"></div>
         
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 shrink-0 relative flex items-center justify-center">
-            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_0_12px_rgba(255,90,31,0.5)]">
-              <defs>
-                <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FF5A1F" />
-                  <stop offset="50%" stopColor="#FBBF24" />
-                  <stop offset="100%" stopColor="#FF5A1F" />
-                </linearGradient>
-              </defs>
-              <path d="M50 5 L88.97 27.5 L88.97 72.5 L50 95 L11.03 72.5 L11.03 27.5 Z" fill="url(#logo-grad)" fillOpacity="0.1" stroke="url(#logo-grad)" strokeWidth="4" strokeLinejoin="round"/>
-              <path d="M60 30 L40 55 L55 55 L40 80 L65 45 L45 45 L60 30 Z" fill="url(#logo-grad)"/>
-            </svg>
+        <div className="p-4 flex items-center gap-2.5">
+          {/* Bridge logo — remplace l'hexagone orange */}
+          <div className="w-11 h-11 shrink-0 rounded-xl overflow-hidden border border-white/10 shadow-lg bg-black/40">
+            <img
+              src="/bridge-logo.jpg"
+              alt="Bridge Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <div className="flex flex-col justify-center flex-1">
-            <h1 className="font-display font-bold text-xl leading-none tracking-tight">Grado & Bridge</h1>
+          <div className="flex flex-col justify-center flex-1 min-w-0">
+            <h1 className="font-display font-bold text-xl leading-none tracking-tight truncate">Grado & Bridge</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-sans mt-1">Manager</p>
           </div>
+          {/* Bouton violet → site Grado */}
+          <a
+            href="https://grado-safi.replit.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ouvrir le site Grado"
+            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl border border-violet-500/40 bg-violet-600/20 hover:bg-violet-600/40 transition-all duration-200 shadow-[0_0_12px_rgba(139,92,246,0.3)] hover:shadow-[0_0_18px_rgba(139,92,246,0.5)]"
+          >
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+              <defs>
+                <linearGradient id="grado-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#A78BFA" />
+                  <stop offset="100%" stopColor="#7C3AED" />
+                </linearGradient>
+              </defs>
+              <path d="M50 5 L88.97 27.5 L88.97 72.5 L50 95 L11.03 72.5 L11.03 27.5 Z" fill="url(#grado-grad)" fillOpacity="0.15" stroke="url(#grado-grad)" strokeWidth="4" strokeLinejoin="round"/>
+              <path d="M60 30 L40 55 L55 55 L40 80 L65 45 L45 45 L60 30 Z" fill="url(#grado-grad)"/>
+            </svg>
+          </a>
           <NotificationBell />
         </div>
 

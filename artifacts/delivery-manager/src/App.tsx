@@ -14,6 +14,7 @@ import RestaurantsPage from "@/pages/restaurants";
 import SafiRunnerPage from "@/pages/safi-runner";
 import ClientsPage from "@/pages/clients";
 import AnnouncementsPage from "@/pages/announcements";
+import GradoSitePage from "@/pages/grado-site";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/clients" component={ClientsPage} />
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/announcements" component={AnnouncementsPage} />
+      <Route path="/grado-site" component={GradoSitePage} />
       <Route component={NotFound} />
     </Switch>
   );

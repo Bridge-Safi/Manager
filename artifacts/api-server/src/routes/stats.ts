@@ -71,4 +71,48 @@ router.post("/register", async (_req, res) => {
   res.json({ registrations: stats[0]?.registrations ?? 0 });
 });
 
+// GET /stats/visits-by-day — historique des visites par jour (14 derniers jours)
+router.get("/visits-by-day", async (_req, res) => {
+  const rows = await db
+    .select({
+      day: sql<string>`${visitLogsTable.createdAt}::date::text`,
+      count: count(),
+    })
+    .from(visitLogsTable)
+    .groupBy(sql`${visitLogsTable.createdAt}::date`)
+    .orderBy(sql`${visitLogsTable.createdAt}::date DESC`)
+    .limit(30);
+
+  res.json(rows);
+});
+
+// GET /stats/devices — répartition des navigateurs/appareils
+router.get("/devices", async (_req, res) => {
+  const rows = await db
+    .select({
+      userAgent: visitLogsTable.userAgent,
+      count: count(),
+    })
+    .from(visitLogsTable)
+    .groupBy(visitLogsTable.userAgent)
+    .orderBy(sql`count(*) DESC`)
+    .limit(20);
+
+  const parsed = rows.map((r) => {
+    const ua = r.userAgent ?? "";
+    let device = "Inconnu";
+    let browser = "Inconnu";
+    if (/iPhone|iPad|Android/.test(ua)) device = "Mobile";
+    else if (/Macintosh|Windows|Linux/.test(ua)) device = "Desktop";
+    if (/HeadlessChrome/.test(ua)) browser = "Bot/Crawl";
+    else if (/Edg/.test(ua)) browser = "Edge";
+    else if (/Chrome/.test(ua)) browser = "Chrome";
+    else if (/Safari/.test(ua)) browser = "Safari";
+    else if (/Firefox/.test(ua)) browser = "Firefox";
+    return { userAgent: r.userAgent, device, browser, count: r.count };
+  });
+
+  res.json(parsed);
+});
+
 export default router;
