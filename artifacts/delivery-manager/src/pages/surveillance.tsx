@@ -287,33 +287,67 @@ export default function SurveillancePage() {
                   <Users className="w-5 h-5 text-blue-400" />
                   Livreurs
                 </CardTitle>
-                <Badge variant="outline" className="font-mono">{drivers?.length ?? 0}</Badge>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground font-mono">GPS: {drivers?.filter(d => d.lat && d.lng).length ?? 0}/{drivers?.length ?? 0}</span>
+                  <Badge variant="outline" className="font-mono">{drivers?.length ?? 0}</Badge>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
-                <ScrollArea className="h-[180px]">
+                <ScrollArea className="h-[220px]">
                   {!drivers || drivers.length === 0 ? (
                     <div className="p-6 text-center text-sm text-muted-foreground">Aucun livreur</div>
                   ) : (
                     <div className="divide-y divide-white/5">
-                      {drivers.map((driver) => (
-                        <div key={driver.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors">
-                          <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
-                            {driver.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">{driver.name}</div>
-                            {driver.lastActiveAt && (
-                              <div className="text-[10px] text-muted-foreground font-mono">
-                                {formatDistanceToNow(new Date(driver.lastActiveAt), { addSuffix: true, locale: fr })}
+                      {drivers.map((driver) => {
+                        const hasGps = !!(driver.lat && driver.lng);
+                        const isBusy = driver.status === "busy" || driver.status === "delivering";
+                        return (
+                          <div key={driver.id} className={cn(
+                            "flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors",
+                            isBusy && "bg-blue-500/5 border-l-2 border-blue-500/40"
+                          )}>
+                            <div className={cn(
+                              "w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 border",
+                              isBusy ? "bg-blue-500/20 border-blue-500/40 text-blue-300" : "bg-primary/10 border-primary/20 text-primary"
+                            )}>
+                              {driver.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{driver.name}</div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {driver.lastActiveAt ? (
+                                  <span className="text-[10px] text-muted-foreground font-mono">
+                                    {formatDistanceToNow(new Date(driver.lastActiveAt), { addSuffix: true, locale: fr })}
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-muted-foreground">Jamais actif</span>
+                                )}
                               </div>
-                            )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <DriverStatusBadge status={driver.status} />
+                              <span className={cn(
+                                "text-[9px] font-mono px-1.5 py-0.5 rounded border",
+                                hasGps
+                                  ? "text-green-400 border-green-500/30 bg-green-500/10"
+                                  : "text-zinc-500 border-zinc-700/50 bg-zinc-800/30"
+                              )}>
+                                {hasGps ? "📍 GPS" : "⊘ Hors GPS"}
+                              </span>
+                            </div>
                           </div>
-                          <DriverStatusBadge status={driver.status} />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </ScrollArea>
+                {drivers && drivers.every(d => !d.lat && !d.lng) && (
+                  <div className="px-4 py-3 border-t border-white/5 bg-amber-500/5">
+                    <p className="text-[11px] text-amber-400/80 leading-relaxed">
+                      ⚠️ Aucun GPS actif. L'app livreur doit envoyer la localisation via <code className="bg-black/30 px-1 rounded">PATCH /api/drivers/:id/location</code>
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

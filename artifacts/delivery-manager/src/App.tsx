@@ -41,6 +41,7 @@ function Router() {
       <Route path="/safi-runner" component={SafiRunnerPage} />
       <Route path="/clients" component={ClientsPage} />
       <Route path="/analytics" component={AnalyticsPage} />
+      <Route path="/announcements" component={AnnouncementsPage} />
       <Route component={NotFound} />
     </Switch>
   );
