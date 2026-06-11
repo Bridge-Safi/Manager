@@ -1,5 +1,6 @@
 [build]
 builder = "NIXPACKS"
+buildCommand = "npm install -g pnpm@9 && pnpm install --frozen-lockfile && pnpm run typecheck:libs && BASE_PATH=/ pnpm --filter @workspace/delivery-manager run build && pnpm --filter @workspace/api-server run build"
 
 [deploy]
 startCommand = "node artifacts/api-server/dist/index.mjs"
