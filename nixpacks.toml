@@ -1,5 +1,16 @@
 [phases.setup]
 nixPkgs = ["nodejs_22"]
+cmds = ["npm install -g pnpm@9"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = [
+  "pnpm run typecheck:libs",
+  "BASE_PATH=/ pnpm --filter @workspace/delivery-manager run build",
+  "pnpm --filter @workspace/api-server run build"
+]
 
 [start]
 cmd = "node artifacts/api-server/dist/index.mjs"
