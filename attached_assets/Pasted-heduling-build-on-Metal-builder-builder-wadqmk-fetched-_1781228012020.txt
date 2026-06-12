@@ -1,0 +1,71 @@
+heduling build on Metal builder "builder-wadqmk"
+fetched snapshot sha256:835ddba3ced59d8b1d954b15b79737b7abbd483638e3b0cc2e1311e43d42622e (30 MB bytes)
+fetching snapshot
+28.8 MB
+394ms
+unpacking archive
+30.9 MB
+528ms
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for docker.io/library/node:22-alpine
+199ms
+
+internal
+load .dockerignore
+0ms
+
+1
+FROM docker.io/library/node:22-alpine@sha256:9385cd9f3001dfc3431e8ead12c43e9e1f87cc1b9b5c6cfd0f73865d405b27c4
+30ms
+
+internal
+load build context
+1ms
+
+4
+RUN npm install -g pnpm@9 &&     pnpm install --no-frozen-lockfile &&     pnpm run typecheck:libs &&     BASE_PATH=/ pnpm --filter @workspace/delivery-manager run build &&     pnpm --filter @workspace/api-server run build cached
+0ms
+
+3
+COPY . . cached
+0ms
+
+2
+WORKDIR /app cached
+0ms
+
+exporting to docker image format
+2s
+containerimage.config.digest: sha256:1ef40adf7c0e1af7a6e0e8c6b583a26c663138422d9ec06bdc3fe83f8bc1e0c3
+containerimage.digest: sha256:faf1b1c8f7e1d148b4175e9837c85620ecb9677f959b3ce8f9c79a69548853fb
+containerimage.descriptor: eyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQub2NpLmltYWdlLm1hbmlmZXN0LnYxK2pzb24iLCJkaWdlc3QiOiJzaGEyNTY6ZmFmMWIxYzhmN2UxZDE0OGI0MTc1ZTk4MzdjODU2MjBlY2I5Njc3Zjk1OWIzY2U4ZjljNzlhNjk1NDg4NTNmYiIsInNpemUiOjE2MjgsImFubm90YXRpb25zIjp7Im9yZy5vcGVuY29udGFpbmVycy5pbWFnZS5jcmVhdGVkIjoiMjAyNi0wNi0xMlQwMToyNjowN1oifSwicGxhdGZvcm0iOnsiYXJjaGl0ZWN0dXJlIjoiYW1kNjQiLCJvcyI6ImxpbnV4In19
+image push
+192.6 MB
+1.8s
+ 
+====================
+Starting Healthcheck
+====================
+Path: /api/healthz
+Retry window: 5m0s
+ 
+Attempt #1 failed with service unavailable. Continuing to retry for 4m49s
+Attempt #2 failed with service unavailable. Continuing to retry for 4m38s
+Attempt #3 failed with service unavailable. Continuing to retry for 4m26s
+Attempt #4 failed with service unavailable. Continuing to retry for 4m12s
+Attempt #5 failed with service unavailable. Continuing to retry for 3m54s
+Attempt #6 failed with service unavailable. Continuing to retry for 3m28s
+Attempt #7 failed with service unavailable. Continuing to retry for 2m48s
+Attempt #8 failed with service unavailable. Continuing to retry for 2m8s
+Attempt #9 failed with service unavailable. Continuing to retry for 1m28s
+Attempt #10 failed with service unavailable. Continuing to retry for 48s
+Attempt #11 failed with service unavailable. Continuing to retry for 8s
+ 
+1/1 replicas never became healthy!
+
+Healthcheck failed!

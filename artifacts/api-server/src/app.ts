@@ -38,7 +38,7 @@ const frontendDist = path.resolve(process.cwd(), "artifacts/delivery-manager/dis
 if (existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
   // Catch-all pour le routing SPA (React Router / wouter)
-  app.get("*", (_req, res) => {
+  app.get("/{*splat}", (_req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
