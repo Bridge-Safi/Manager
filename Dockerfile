@@ -7,6 +7,5 @@ RUN npm install -g pnpm@9 && \
     BASE_PATH=/ pnpm --filter @workspace/delivery-manager run build && \
     pnpm --filter @workspace/api-server run build
 ENV NODE_ENV=production
-ENV PORT=3000
 EXPOSE 3000
 CMD ["node", "artifacts/api-server/dist/index.mjs"]
