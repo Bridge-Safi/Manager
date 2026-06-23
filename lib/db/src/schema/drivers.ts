@@ -9,6 +9,13 @@ export const driversTable = pgTable("drivers", {
   email: text("email"),
   vehicleType: text("vehicle_type").notNull().default("moto"),
   status: text("status").notNull().default("available"),
+  // Colonne login (compatible DB Livreurs)
+  password: text("password"),
+  // Colonnes véhicule Livreurs
+  vehicleModel: text("vehicle_model"),
+  vehiclePlate: text("vehicle_plate"),
+  licenseNumber: text("license_number"),
+  // Colonnes Manager (ajoutées par migration)
   rating: real("rating").notNull().default(5.0),
   totalDeliveries: integer("total_deliveries").notNull().default(0),
   totalRevenue: real("total_revenue").notNull().default(0),
@@ -21,7 +28,6 @@ export const driversTable = pgTable("drivers", {
   services: text("services").notNull().default("nourriture"),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  passwordHash: text("password_hash"),
 });
 
 export const insertDriverSchema = createInsertSchema(driversTable).omit({ id: true, createdAt: true });
