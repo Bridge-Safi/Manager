@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, driversTable, activitiesTable, ordersTable, reviewsTable } from "@workspace/db";
+import { db, driversTable, activitiesTable, ordersTable } from "@workspace/db";
 import { eq, desc, and, sql, gte } from "drizzle-orm";
 import {
   CreateDriverBody,
@@ -75,9 +75,9 @@ router.post("/", async (req, res) => {
     .values({
       ...driverData,
       password: hashedPassword,
-      vehicleModel: (driverData as any).vehicleModel ?? "",
-      vehiclePlate: (driverData as any).vehiclePlate ?? "",
-      licenseNumber: (driverData as any).licenseNumber ?? "",
+      vehicleModel: "",
+      vehiclePlate: "",
+      licenseNumber: "",
       status: "available",
       rating: 5.0,
       totalDeliveries: 0,
@@ -100,13 +100,11 @@ router.get("/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid ID" });
     return;
   }
-
   const [driver] = await db.select().from(driversTable).where(eq(driversTable.id, parsed.data.id));
   if (!driver) {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-
   res.json(formatDriver(driver));
 });
 
@@ -116,20 +114,17 @@ router.patch("/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid ID" });
     return;
   }
-
   const bodyParsed = UpdateDriverBody.safeParse(req.body);
   if (!bodyParsed.success) {
     res.status(400).json({ error: bodyParsed.error.message });
     return;
   }
-
   const existingRows = await db.select().from(driversTable).where(eq(driversTable.id, paramParsed.data.id));
   const existing = existingRows[0];
   if (!existing) {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-
   const [updated] = await db
     .update(driversTable)
     .set(bodyParsed.data)
@@ -153,7 +148,6 @@ router.patch("/:id", async (req, res) => {
       details: `${updated.name} ${labelMap[bodyParsed.data.status] ?? "a changé de statut"}`,
     });
   }
-
   res.json(formatDriver(updated));
 });
 
@@ -163,20 +157,14 @@ router.patch("/:id/location", async (req, res) => {
     res.status(400).json({ error: "Invalid ID" });
     return;
   }
-
   const bodyParsed = UpdateDriverLocationBody.safeParse(req.body);
   if (!bodyParsed.success) {
     res.status(400).json({ error: bodyParsed.error.message });
     return;
   }
-
   const [updated] = await db
     .update(driversTable)
-    .set({
-      lat: bodyParsed.data.lat,
-      lng: bodyParsed.data.lng,
-      lastActiveAt: new Date(),
-    })
+    .set({ lat: bodyParsed.data.lat, lng: bodyParsed.data.lng, lastActiveAt: new Date() })
     .where(eq(driversTable.id, paramParsed.data.id))
     .returning();
 
@@ -184,7 +172,6 @@ router.patch("/:id/location", async (req, res) => {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-
   res.json(formatDriver(updated));
 });
 
@@ -215,7 +202,6 @@ router.get("/:id/activities", async (req, res) => {
 
 router.get("/:id/today", async (req, res) => {
   const driverId = Number(req.params.id);
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -225,23 +211,12 @@ router.get("/:id/today", async (req, res) => {
       revenue: sql<number>`coalesce(sum(${ordersTable.totalAmount}), 0)::float`,
     })
     .from(ordersTable)
-    .where(
-      and(
-        eq(ordersTable.driverId, driverId),
-        eq(ordersTable.status, "delivered"),
-        gte(ordersTable.updatedAt, today)
-      )
-    );
+    .where(and(eq(ordersTable.driverId, driverId), eq(ordersTable.status, "delivered"), gte(ordersTable.updatedAt, today)));
 
   const activeOrder = await db
     .select({ id: ordersTable.id, orderNumber: ordersTable.orderNumber })
     .from(ordersTable)
-    .where(
-      and(
-        eq(ordersTable.driverId, driverId),
-        sql`${ordersTable.status} IN ('assigned', 'in_delivery')`
-      )
-    )
+    .where(and(eq(ordersTable.driverId, driverId), sql`${ordersTable.status} IN ('assigned', 'in_delivery')`))
     .limit(1);
 
   const lastActivity = await db
