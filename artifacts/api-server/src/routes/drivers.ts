@@ -37,11 +37,11 @@ router.post("/auth", async (req, res) => {
     .where(eq(driversTable.email, email as string))
     .limit(1);
 
-  if (!driver || !driver.passwordHash) {
+  if (!driver || !driver.password) {
     res.status(401).json({ error: "Identifiants invalides" });
     return;
   }
-  const valid = await bcrypt.compare(password as string, driver.passwordHash);
+  const valid = await bcrypt.compare(password as string, driver.password);
   if (!valid) {
     res.status(401).json({ error: "Identifiants invalides" });
     return;
@@ -62,21 +62,22 @@ router.post("/", async (req, res) => {
 
   const { password, ...driverData } = parsed.data as typeof parsed.data & { password?: string };
 
-  let passwordHash: string | undefined;
-  let plainPassword: string | undefined;
-
+  let plainPassword: string;
   if (password && password.trim().length > 0) {
     plainPassword = password.trim();
   } else {
     plainPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
   }
-  passwordHash = await bcrypt.hash(plainPassword, 10);
+  const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
   const [driver] = await db
     .insert(driversTable)
     .values({
       ...driverData,
-      passwordHash,
+      password: hashedPassword,
+      vehicleModel: (driverData as any).vehicleModel ?? "",
+      vehiclePlate: (driverData as any).vehiclePlate ?? "",
+      licenseNumber: (driverData as any).licenseNumber ?? "",
       status: "available",
       rating: 5.0,
       totalDeliveries: 0,
@@ -135,7 +136,6 @@ router.patch("/:id", async (req, res) => {
     .where(eq(driversTable.id, paramParsed.data.id))
     .returning();
 
-  // Log status changes
   if (bodyParsed.data.status && bodyParsed.data.status !== existing.status) {
     const actionMap: Record<string, string> = {
       available: "status_available",
@@ -188,7 +188,6 @@ router.patch("/:id/location", async (req, res) => {
   res.json(formatDriver(updated));
 });
 
-// GET /drivers/:id/activities
 router.get("/:id/activities", async (req, res) => {
   const id = Number(req.params.id);
   const limit = parseInt(req.query.limit as string) || 50;
@@ -214,7 +213,6 @@ router.get("/:id/activities", async (req, res) => {
   res.json(rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })));
 });
 
-// GET /drivers/:id/today
 router.get("/:id/today", async (req, res) => {
   const driverId = Number(req.params.id);
 
