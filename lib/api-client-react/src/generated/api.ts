@@ -938,6 +938,8 @@ export const useUpdateDriver = <
   TContext
 > => {
   return useMutation(getUpdateDriverMutationOptions(options));
+};
+
 
 /**
  * @summary Delete a driver
@@ -1021,8 +1023,6 @@ export const useDeleteDriver = <
 > => {
   return useMutation(getDeleteDriverMutationOptions(options));
 };
-};
-
 /**
  * @summary Record an order refusal for a driver
  */
