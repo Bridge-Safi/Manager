@@ -94,7 +94,7 @@ router.post("/", async (req, res) => {
 
   // Apply the new password immediately so the generated code actually works for login
   const hashedPassword = await bcrypt.hash(resetCode, 10);
-  const updateResult = await db.update(driversTable).set({ password: hashedPassword }).where(eq(driversTable.id, driverId)).returning({ id: driversTable.id, password: driversTable.password });
+  await db.update(driversTable).set({ password: hashedPassword }).where(eq(driversTable.id, driverId));
 
   const [request] = await db
     .insert(resetRequestsTable)
@@ -121,7 +121,7 @@ router.post("/", async (req, res) => {
     sentAt: request.sentAt,
   };
 
-  res.status(201).json({ ...formatRequest(row), debugPasswordSet: !!updateResult[0]?.password, debugPasswordLen: updateResult[0]?.password?.length ?? 0, debugUpdateRows: updateResult.length });
+  res.status(201).json(formatRequest(row));
 });
 
 // PATCH /reset-requests/:id/send
