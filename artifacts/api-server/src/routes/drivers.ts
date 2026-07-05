@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, driversTable, activitiesTable, ordersTable } from "@workspace/db";
+import { db, driversTable, activitiesTable, ordersTable, reviewsTable, resetRequestsTable } from "@workspace/db";
 import { eq, desc, and, sql, gte } from "drizzle-orm";
 import {
   CreateDriverBody,
@@ -108,6 +108,29 @@ router.get("/:id", async (req, res) => {
   res.json(formatDriver(driver));
 });
 
+router.delete("/:id", async (req, res) => {
+  const parsed = GetDriverParams.safeParse({ id: Number(req.params.id) });
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+  const { id } = parsed.data;
+
+  const [driver] = await db.select().from(driversTable).where(eq(driversTable.id, id));
+  if (!driver) {
+    res.status(404).json({ error: "Driver not found" });
+    return;
+  }
+
+  // Clean up dependent rows first (FK constraints), preserving order history
+  await db.delete(resetRequestsTable).where(eq(resetRequestsTable.driverId, id));
+  await db.delete(reviewsTable).where(eq(reviewsTable.driverId, id));
+  await db.update(ordersTable).set({ driverId: null }).where(eq(ordersTable.driverId, id));
+  await db.delete(activitiesTable).where(eq(activitiesTable.driverId, id));
+  await db.delete(driversTable).where(eq(driversTable.id, id));
+
+  res.json({ success: true });
+});
 router.patch("/:id", async (req, res) => {
   const paramParsed = UpdateDriverParams.safeParse({ id: Number(req.params.id) });
   if (!paramParsed.success) {
