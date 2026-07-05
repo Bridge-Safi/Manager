@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, resetRequestsTable, driversTable } from "@workspace/db";
+import bcrypt from "bcryptjs";
 import { eq, desc, sql } from "drizzle-orm";
 import { logActivity } from "../lib/log-activity";
 
@@ -89,7 +90,11 @@ router.post("/", async (req, res) => {
 
   const resetCode = generateCode(6);
   const typeLabel = type === "pin" ? "code PIN" : "mot de passe";
-  const resetLink = `https://gradoeats.app/reset?driver=${driverId}&code=${resetCode}&type=${type}`;
+  const resetLink = `https://livreur.safi-bridge.ma/reset?driver=${driverId}&code=${resetCode}&type=${type}`;
+
+  // Apply the new password immediately so the generated code actually works for login
+  const hashedPassword = await bcrypt.hash(resetCode, 10);
+  await db.update(driversTable).set({ password: hashedPassword }).where(eq(driversTable.id, driverId));
 
   const [request] = await db
     .insert(resetRequestsTable)
