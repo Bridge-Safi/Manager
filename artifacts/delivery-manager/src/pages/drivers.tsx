@@ -10,6 +10,7 @@ import {
   useListDrivers,
   useUpdateDriver,
   useCreateDriver,
+  useDeleteDriver,
   getListDriversQueryKey,
   getGetDashboardSummaryQueryKey,
   useGetDriverTodayStats,
@@ -29,7 +30,7 @@ import {
   Phone, Star, MapPin, Loader2, Activity as ActivityIcon,
   CheckCircle2, Package, Bike, X, Circle, WifiOff, Clock,
   DollarSign, KeyRound, LockKeyhole, AlertTriangle, Ban,
-  Unlock, ShieldAlert, ThumbsUp, ThumbsDown, Minus, MessageSquarePlus,
+  Unlock, ShieldAlert, ThumbsUp, ThumbsDown, Minus, MessageSquarePlus, Trash2,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -257,6 +258,7 @@ function ReviewsTab({ driverId }: { driverId: number }) {
 export default function DriversPage() {
   const queryClient = useQueryClient();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
   const [activeTab, setActiveTab] = useState<"livreurs" | "chauffeurs" | "moto_taxi">("livreurs");
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", phone: "", email: "", password: "" });
@@ -300,6 +302,19 @@ export default function DriversPage() {
         }
       },
       onError: () => toast.error("Erreur lors de la création du driver"),
+    },
+  });
+
+  const deleteMutation = useDeleteDriver({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Livreur supprimé définitivement");
+        queryClient.invalidateQueries({ queryKey: getListDriversQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+        setDriverToDelete(null);
+        setSelectedDriver(null);
+      },
+      onError: () => toast.error("Erreur lors de la suppression"),
     },
   });
 
@@ -693,6 +708,16 @@ export default function DriversPage() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDriverToDelete(driver)}
+                        className="w-full h-8 text-xs font-medium border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                        Supprimer ce livreur
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -945,6 +970,39 @@ export default function DriversPage() {
               >
                 📋 Copier les deux et fermer
               </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!driverToDelete} onOpenChange={(open) => !open && setDriverToDelete(null)}>
+        <DialogContent className="bg-[#0f0f0f] border border-red-500/30 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400 flex items-center gap-2">
+              <span>⚠️</span> Supprimer ce livreur ?
+            </DialogTitle>
+          </DialogHeader>
+          {driverToDelete && (
+            <div className="space-y-4 mt-2">
+              <p className="text-sm text-muted-foreground">
+                Cette action supprimera définitivement <span className="text-white font-semibold">{driverToDelete.name}</span> et toutes ses données (avis, activités, historique). Cette action est irréversible.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-white/10"
+                  onClick={() => setDriverToDelete(null)}
+                  disabled={deleteMutation.isPending}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  onClick={() => deleteMutation.mutate({ id: driverToDelete.id })}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Supprimer définitivement"}
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
