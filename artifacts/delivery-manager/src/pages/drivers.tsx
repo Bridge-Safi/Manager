@@ -708,7 +708,9 @@ export default function DriversPage() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                    </div>
 
+                    <div className="mt-2">
                       <Button
                         variant="outline"
                         size="sm"
