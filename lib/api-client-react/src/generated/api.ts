@@ -938,6 +938,89 @@ export const useUpdateDriver = <
   TContext
 > => {
   return useMutation(getUpdateDriverMutationOptions(options));
+
+/**
+ * @summary Delete a driver
+ */
+export const getDeleteDriverUrl = (id: number) => {
+  return `/api/drivers/${id}`;
+};
+
+export const deleteDriver = async (
+  id: number,
+  options?: RequestInit,
+): Promise<{ success: boolean }> => {
+  return customFetch<{ success: boolean }>(getDeleteDriverUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDriverMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDriver>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDriver>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDriver"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDriver>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDriver(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDriverMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDriver>>
+>;
+export type DeleteDriverMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a driver
+ */
+export const useDeleteDriver = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDriver>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDriver>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDriverMutationOptions(options));
+};
 };
 
 /**
