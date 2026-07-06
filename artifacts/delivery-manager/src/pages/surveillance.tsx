@@ -86,7 +86,7 @@ export default function SurveillancePage() {
   }, [activities, alerts, drivers, restaurants]);
 
   const availableDrivers = drivers?.filter(d => d.status === "available").length ?? 0;
-  const busyDrivers = drivers?.filter(d => d.status === "busy" || d.status === "delivering").length ?? 0;
+  const busyDrivers = drivers?.filter(d => d.status === "busy").length ?? 0;
   const openRestaurants = restaurants?.filter(r => r.status === "open").length ?? 0;
   const totalPendingOrders = restaurants?.reduce((s, r) => s + r.pendingCount, 0) ?? 0;
 
@@ -300,7 +300,7 @@ export default function SurveillancePage() {
                     <div className="divide-y divide-white/5">
                       {drivers.map((driver) => {
                         const hasGps = !!(driver.lat && driver.lng);
-                        const isBusy = driver.status === "busy" || driver.status === "delivering";
+                        const isBusy = driver.status === "busy";
                         return (
                           <div key={driver.id} className={cn(
                             "flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors",

@@ -283,6 +283,13 @@ export const UpdateDriverResponse = zod.object({
 });
 
 /**
+ * @summary Delete a driver
+ */
+export const DeleteDriverParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary Record an order refusal for a driver
  */
 export const RecordDriverRefusalParams = zod.object({
