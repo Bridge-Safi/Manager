@@ -61,7 +61,12 @@ export default function AnnouncementsPage() {
     },
   });
 
-  const gmailConfigured = true;
+  const { data: notifStatus } = useQuery<{ gmailConfigured: boolean; gmailUser: string | null }>({
+    queryKey: ["/api/notifications/status"],
+    queryFn: () => fetch("/api/notifications/status").then(r => r.json()),
+    staleTime: 60000,
+  });
+  const gmailConfigured = notifStatus?.gmailConfigured ?? false;
 
   return (
     <Layout>
@@ -154,7 +159,7 @@ export default function AnnouncementsPage() {
               </CardHeader>
               <CardContent className="p-4 pt-2 space-y-2">
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-black/30 border border-white/10">
-                  <span className="text-xs font-mono text-amber-400 flex-1">bridge.safi@gmail.com</span>
+                  <span className="text-xs font-mono text-amber-400 flex-1">{notifStatus?.gmailUser ?? "—"}</span>
                   {gmailConfigured ? (
                     <CheckCircle2 className="w-4 h-4 text-green-400" />
                   ) : (
@@ -260,6 +265,21 @@ export default function AnnouncementsPage() {
                   <p className="text-xs text-amber-500/80 text-center">
                     ⚠️ Aucun email trouvé. Ajoutez des emails aux livreurs/clients ou configurez la clé Supabase pour les joueurs.
                   </p>
+                )}
+
+                {showPreview && (
+                  <div className="mt-4 rounded-xl overflow-hidden border border-white/10">
+                    <div className="px-4 py-2 bg-black/40 border-b border-white/10 flex items-center gap-2">
+                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground font-mono">Aperçu de l'email — sujet : {subject}</span>
+                    </div>
+                    <iframe
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>body{background:#0a0a0a;margin:0;padding:16px;font-family:Inter,Arial,sans-serif;color:#e5e5e5;}*{box-sizing:border-box;}</style></head><body><div style="max-width:600px;margin:0 auto;background:linear-gradient(145deg,#111,#1a1a1a);border:1px solid rgba(255,90,31,0.2);border-radius:24px;overflow:hidden;"><div style="background:linear-gradient(135deg,#ff5a1f,#ff8c00);padding:40px 32px;text-align:center;"><div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;">Bridge Safi</div><div style="font-size:13px;color:rgba(255,255,255,0.75);letter-spacing:0.15em;text-transform:uppercase;margin-top:4px;">DELIVERY · SAFI · MAROC</div></div><div style="padding:40px 32px;"><h2 style="font-size:22px;font-weight:700;color:#fff;margin-bottom:16px;">${subject}</h2><p style="color:#a0a0a0;font-size:15px;line-height:1.7;">Bonjour,</p><p style="color:#a0a0a0;font-size:15px;line-height:1.7;">Nous avons une annonce importante à vous partager concernant Bridge Safi.</p><div style="text-align:center;margin:32px 0;"><a href="#" style="display:inline-block;background:linear-gradient(135deg,#ff5a1f,#ff8c00);color:#fff;font-weight:700;font-size:15px;text-decoration:none;padding:14px 36px;border-radius:999px;">En savoir plus</a></div></div><div style="padding:24px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;"><p style="font-size:12px;color:#555;">© 2025 Bridge Safi · Safi, Maroc 🇲🇦</p></div></div></body></html>`}
+                      className="w-full bg-[#0a0a0a]"
+                      style={{ height: "480px", border: "none" }}
+                      title="Aperçu email"
+                    />
+                  </div>
                 )}
               </CardContent>
             </Card>

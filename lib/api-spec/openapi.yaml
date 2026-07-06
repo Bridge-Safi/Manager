@@ -1777,6 +1777,8 @@ components:
           type: integer
         deliveredOrders:
           type: integer
+        cancelledOrders:
+          type: integer
         totalRevenue:
           type: number
         todayRevenue:
@@ -1794,6 +1796,7 @@ components:
         - pendingOrders
         - inDeliveryOrders
         - deliveredOrders
+        - cancelledOrders
         - totalRevenue
         - todayRevenue
         - todayOrders

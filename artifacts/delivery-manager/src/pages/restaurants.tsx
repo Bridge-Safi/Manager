@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useListRestaurants, useCreateRestaurant, useUpdateRestaurant, useDeleteRestaurant, useGetRestaurantsOverview } from "@workspace/api-client-react";
+import { useListRestaurants, useCreateRestaurant, useUpdateRestaurant, useDeleteRestaurant, useGetRestaurantsOverview, getListRestaurantsQueryKey, getGetRestaurantsOverviewQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -96,7 +96,8 @@ export default function RestaurantsPage() {
         toast({ title: "Restaurant créé avec succès" });
         setCreateOpen(false);
         setForm(defaultForm);
-        queryClient.invalidateQueries({ queryKey: ["/api/restaurants"] });
+        queryClient.invalidateQueries({ queryKey: getListRestaurantsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetRestaurantsOverviewQueryKey() });
       },
       onError: () => toast({ title: "Erreur lors de la création", variant: "destructive" }),
     },
@@ -107,7 +108,8 @@ export default function RestaurantsPage() {
       onSuccess: () => {
         toast({ title: "Restaurant mis à jour" });
         setEditingId(null);
-        queryClient.invalidateQueries({ queryKey: ["/api/restaurants"] });
+        queryClient.invalidateQueries({ queryKey: getListRestaurantsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetRestaurantsOverviewQueryKey() });
       },
       onError: () => toast({ title: "Erreur lors de la mise à jour", variant: "destructive" }),
     },
@@ -117,7 +119,8 @@ export default function RestaurantsPage() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Restaurant désactivé" });
-        queryClient.invalidateQueries({ queryKey: ["/api/restaurants"] });
+        queryClient.invalidateQueries({ queryKey: getListRestaurantsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetRestaurantsOverviewQueryKey() });
       },
       onError: () => toast({ title: "Erreur", variant: "destructive" }),
     },

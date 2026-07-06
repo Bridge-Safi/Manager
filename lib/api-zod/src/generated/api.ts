@@ -568,6 +568,7 @@ export const GetDashboardSummaryResponse = zod.object({
   pendingOrders: zod.number(),
   inDeliveryOrders: zod.number(),
   deliveredOrders: zod.number(),
+  cancelledOrders: zod.number(),
   totalRevenue: zod.number(),
   todayRevenue: zod.number(),
   todayOrders: zod.number(),

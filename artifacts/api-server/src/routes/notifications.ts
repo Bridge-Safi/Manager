@@ -78,6 +78,15 @@ function buildEmailHtml(subject: string, body: string): string {
 </html>`;
 }
 
+router.get("/status", (_req, res) => {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  res.json({
+    gmailConfigured: !!(user && pass),
+    gmailUser: user ?? null,
+  });
+});
+
 router.get("/emails", async (_req, res) => {
   const drivers = await db.select({ email: driversTable.email, name: driversTable.name })
     .from(driversTable)

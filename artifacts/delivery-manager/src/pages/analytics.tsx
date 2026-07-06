@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useGetRevenueStats, useGetDriverStats, useGetCustomerStats } from "@workspace/api-client-react";
+import { useGetRevenueStats, useGetDriverStats, useGetCustomerStats, useGetDashboardSummary } from "@workspace/api-client-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Loader2, Users, Trophy, Phone, ShoppingBag, Crown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,9 +34,13 @@ export default function AnalyticsPage() {
     formattedDate: format(parseISO(day.date), 'EEE d', { locale: fr })
   })) || [];
 
+  const { data: dashboardSummary } = useGetDashboardSummary({ query: { refetchInterval: 30000 } });
+  const totalFinished = (dashboardSummary?.deliveredOrders ?? 0) + (dashboardSummary?.cancelledOrders ?? 0);
+  const deliveredPct = totalFinished > 0 ? Math.round((dashboardSummary!.deliveredOrders / totalFinished) * 100) : 0;
+  const cancelledPct = totalFinished > 0 ? 100 - deliveredPct : 0;
   const orderStatusData = [
-    { name: 'Livrées', value: 85, color: 'hsl(var(--primary))' },
-    { name: 'Annulées', value: 15, color: 'hsl(var(--muted-foreground))' },
+    { name: 'Livrées', value: deliveredPct || 0, color: 'hsl(var(--primary))' },
+    { name: 'Annulées', value: cancelledPct || 0, color: 'hsl(var(--muted-foreground))' },
   ];
 
   return (
@@ -258,7 +262,7 @@ export default function AnalyticsPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-                  <span className="font-display text-5xl font-bold tracking-tighter text-primary drop-shadow-[0_0_10px_rgba(255,90,31,0.5)]">85<span className="text-2xl text-primary/70">%</span></span>
+                  <span className="font-display text-5xl font-bold tracking-tighter text-primary drop-shadow-[0_0_10px_rgba(255,90,31,0.5)]">{deliveredPct}<span className="text-2xl text-primary/70">%</span></span>
                   <span className="text-[10px] text-muted-foreground font-sans uppercase tracking-[0.2em] mt-1">Livrées</span>
                 </div>
               </div>

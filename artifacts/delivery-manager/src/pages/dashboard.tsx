@@ -110,7 +110,7 @@ export default function Dashboard() {
             unit="MAD"
             icon={DollarSign} 
             color="orange"
-            trend="+12%" 
+            trend={summary && summary.todayOrders > 0 ? `${summary.todayOrders} cmd` : undefined} 
           />
           <KpiCard 
             title="Commandes" 

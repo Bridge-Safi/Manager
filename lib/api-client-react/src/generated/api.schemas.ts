@@ -234,6 +234,7 @@ export interface DashboardSummary {
   pendingOrders: number;
   inDeliveryOrders: number;
   deliveredOrders: number;
+  cancelledOrders: number;
   totalRevenue: number;
   todayRevenue: number;
   todayOrders: number;

@@ -49,25 +49,25 @@ router.post("/visit", async (req, res) => {
   await db.insert(visitLogsTable).values({ sessionId, userAgent: userAgent ?? null });
 
   // Incrémenter le compteur
-  await ensureStatsRow();
+  const row = await ensureStatsRow();
   await db.update(siteStatsTable).set({
     visits: sql`${siteStatsTable.visits} + 1`,
     updatedAt: new Date(),
-  }).where(eq(siteStatsTable.id, 1));
+  }).where(eq(siteStatsTable.id, row.id));
 
-  const stats = await db.select().from(siteStatsTable).limit(1);
+  const stats = await db.select().from(siteStatsTable).where(eq(siteStatsTable.id, row.id)).limit(1);
   res.json({ counted: true, visits: stats[0]?.visits ?? 0, registrations: stats[0]?.registrations ?? 0 });
 });
 
 // POST /stats/register — enregistre une inscription
 router.post("/register", async (_req, res) => {
-  await ensureStatsRow();
+  const row = await ensureStatsRow();
   await db.update(siteStatsTable).set({
     registrations: sql`${siteStatsTable.registrations} + 1`,
     updatedAt: new Date(),
-  }).where(eq(siteStatsTable.id, 1));
+  }).where(eq(siteStatsTable.id, row.id));
 
-  const stats = await db.select().from(siteStatsTable).limit(1);
+  const stats = await db.select().from(siteStatsTable).where(eq(siteStatsTable.id, row.id)).limit(1);
   res.json({ registrations: stats[0]?.registrations ?? 0 });
 });
 
