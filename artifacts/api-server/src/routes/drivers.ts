@@ -129,7 +129,7 @@ router.delete("/:id", async (req, res) => {
   await db.delete(activitiesTable).where(eq(activitiesTable.driverId, id));
   await db.delete(driversTable).where(eq(driversTable.id, id));
 
-  res.json({ success: true });
+  res.status(204).end();
 });
 router.patch("/:id", async (req, res) => {
   const paramParsed = UpdateDriverParams.safeParse({ id: Number(req.params.id) });
