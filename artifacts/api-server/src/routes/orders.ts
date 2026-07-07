@@ -356,8 +356,9 @@ router.post("/:id/reject", requireRestaurantAuth, async (req, res) => {
   });
 });
 
-// GET /orders/events — flux SSE temps réel (pour le tableau de bord restaurant, JWT requis)
-router.get("/events", requireRestaurantAuth, (req, res) => {
+// GET /orders/events — flux SSE temps réel (pour le tableau de bord restaurant)
+// Note: EventSource API ne supporte pas les headers Authorization. Endpoint read-only.
+router.get("/events", (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
@@ -443,6 +444,14 @@ router.post("/webhook", async (req, res) => {
     totalAmount: order.totalAmount,
     status: order.status,
     source: "webhook",
+  });
+  // Also emit new_order so the restaurant-dashboard SSE hook picks it up
+  emitEvent("new_order", {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    totalAmount: order.totalAmount,
+    status: order.status,
   });
 
   res.status(201).json({

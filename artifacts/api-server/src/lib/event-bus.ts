@@ -26,6 +26,7 @@ export type SSEEventType =
   | "player:updated"
   | "player:deleted"
   | "player:online"
+  | "new_order"       // restaurant-dashboard: new order arrived (alias for order:created)
   | "ping";
 
 export function emitEvent(type: SSEEventType, data: unknown) {
