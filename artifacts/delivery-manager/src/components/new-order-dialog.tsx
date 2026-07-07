@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Plus, Phone, MapPin, ShoppingBag, FileText, Hash } from "lucide-react";
+import { Loader2, Plus, Phone, MapPin, ShoppingBag, FileText, Hash, Layers } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateOrder, getListOrdersQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+
+const PLATFORMS = ["Bridge Eat", "Bridge Tabac", "Bridge Fleur", "Bridge Pharmacie", "Autre"] as const;
 
 interface Props {
   open: boolean;
@@ -31,6 +34,7 @@ export function NewOrderDialog({ open, onClose }: Props) {
     items: "",
     totalAmount: "",
     notes: "",
+    platform: "",
   });
 
   const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -51,6 +55,7 @@ export function NewOrderDialog({ open, onClose }: Props) {
           items: "",
           totalAmount: "",
           notes: "",
+          platform: "",
         });
       },
       onError: () => toast.error("Erreur lors de la création de la commande"),
@@ -73,6 +78,7 @@ export function NewOrderDialog({ open, onClose }: Props) {
         items: form.items,
         totalAmount: amount,
         notes: form.notes || undefined,
+        platform: form.platform || undefined,
       },
     });
   };
@@ -98,6 +104,23 @@ export function NewOrderDialog({ open, onClose }: Props) {
               onChange={set("orderNumber")}
               className="bg-black/40 border-white/10 font-mono focus:border-primary"
             />
+          </div>
+
+          {/* Platform */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wider font-sans flex items-center gap-1.5">
+              <Layers className="w-3 h-3" /> Plateforme
+            </Label>
+            <Select value={form.platform} onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}>
+              <SelectTrigger className="bg-black/40 border-white/10 focus:border-primary">
+                <SelectValue placeholder="Sélectionner une plateforme…" />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORMS.map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
