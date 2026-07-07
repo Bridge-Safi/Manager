@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/driver-app/"
+title = "Bridge Safi — App Livreur"
+version = "1.0.0"
+id = "artifacts/driver-app"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/driver-app/" ]
+localPort = 18861
+
+[services.development]
+run = "pnpm --filter @workspace/driver-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/driver-app", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/driver-app/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18861"
+BASE_PATH = "/driver-app/"
