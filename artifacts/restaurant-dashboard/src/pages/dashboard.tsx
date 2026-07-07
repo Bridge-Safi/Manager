@@ -193,10 +193,11 @@ export default function Dashboard() {
   const [prepTime, setPrepTime] = useState(20);
   const [mobileTab, setMobileTab] = useState<"pending" | "accepted" | "ready">("pending");
 
-  const accepted = recentOrders.filter((o) => o.status === "accepted");
-  const ready    = recentOrders.filter((o) => o.status === "ready");
+  // Dans Bridge Manager: pending → assigned → in_delivery → delivered
+  const accepted = recentOrders.filter((o) => o.status === "assigned");
+  const ready    = recentOrders.filter((o) => o.status === "in_delivery");
   // "Nouvelles" = commandes en attente + commandes acceptées (toujours en cours de préparation)
-  const newOrders = recentOrders.filter((o) => o.status === "pending" || o.status === "accepted");
+  const newOrders = recentOrders.filter((o) => o.status === "pending" || o.status === "assigned");
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: getGetOrderStatsQueryKey() });
