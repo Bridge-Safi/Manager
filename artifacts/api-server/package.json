@@ -18,6 +18,7 @@
     "drizzle-orm": "catalog:",
     "express": "^5",
     "nodemailer": "^8.0.10",
+    "pg": "^8.20.0",
     "pino": "^9",
     "pino-http": "^10"
   },
