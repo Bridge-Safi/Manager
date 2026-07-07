@@ -196,6 +196,7 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [newOrderOpen, setNewOrderOpen] = useState(false);
@@ -227,6 +228,10 @@ export default function OrdersPage() {
     updateOrderMutation.mutate({ id, data: { status } });
   };
 
+  const availablePlatforms = Array.from(
+    new Set((allOrders ?? []).map((o) => o.platform).filter(Boolean) as string[])
+  ).sort();
+
   const filteredOrders = (allOrders ?? []).filter(order => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -235,7 +240,8 @@ export default function OrdersPage() {
       (order.platform ?? "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesService = serviceFilter === "all" || order.serviceType === serviceFilter;
-    return matchesSearch && matchesStatus && matchesService;
+    const matchesPlatform = platformFilter === "all" || order.platform === platformFilter;
+    return matchesSearch && matchesStatus && matchesService && matchesPlatform;
   });
 
   const pendingCount = pendingOrders?.length ?? 0;
@@ -376,6 +382,24 @@ export default function OrdersPage() {
                 />
               </div>
               <div className="flex gap-2 flex-wrap">
+                <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                  <SelectTrigger className="w-[185px] bg-black/40 border-white/10 h-11 focus:ring-primary/50">
+                    <SelectValue placeholder="Toutes les plateformes" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
+                    <SelectItem value="all">🌐 Toutes les plateformes</SelectItem>
+                    {availablePlatforms.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        <span className="flex items-center gap-1.5">
+                          <Store className="w-3 h-3" /> {p}
+                        </span>
+                      </SelectItem>
+                    ))}
+                    {availablePlatforms.length === 0 && (
+                      <SelectItem value="__none" disabled>Aucune plateforme</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
                 <Select value={serviceFilter} onValueChange={setServiceFilter}>
                   <SelectTrigger className="w-[170px] bg-black/40 border-white/10 h-11 focus:ring-primary/50">
                     <SelectValue placeholder="Tous les services" />
