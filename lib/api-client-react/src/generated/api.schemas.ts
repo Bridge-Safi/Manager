@@ -270,6 +270,13 @@ export interface TopCustomer {
   totalSpent: number;
 }
 
+export interface PlatformHistoryDay {
+  date: string;
+  platform: string;
+  orderCount: number;
+  revenue: number;
+}
+
 export interface PlatformStat {
   platform: string;
   orderCount: number;

@@ -1,20 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useGetDashboardSummary, useListOrders, useListDrivers, useListActivities, useGetPlatformStats } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useListOrders, useListDrivers, useListActivities, useGetPlatformStats, useGetPlatformHistory } from "@workspace/api-client-react";
 import { OrderStatusBadge, DriverStatusBadge } from "@/components/status-badges";
 import { AssignDriverDialog } from "@/components/assign-driver-dialog";
 import { NewOrderDialog } from "@/components/new-order-dialog";
 import { Order } from "@workspace/api-client-react";
 import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 import { cn } from "@/lib/utils";
-import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle, Eye, UserPlus, LayoutGrid } from "lucide-react";
+import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle, Eye, UserPlus, LayoutGrid, LineChart as LineChartIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
 function useSiteStats() {
   const [stats, setStats] = useState<{ visits: number; registrations: number } | null>(null);
@@ -73,6 +76,44 @@ export default function Dashboard() {
   const { data: platformStats } = useGetPlatformStats({
     query: { refetchInterval: 30000 }
   });
+
+  const { data: platformHistory, isLoading: loadingHistory } = useGetPlatformHistory({
+    query: { refetchInterval: 60000 }
+  });
+
+  // Build chart data: one entry per day, each platform as a numeric key
+  const { chartData, platforms } = useMemo(() => {
+    if (!platformHistory || platformHistory.length === 0) return { chartData: [], platforms: [] };
+
+    // Collect all distinct platforms
+    const platformSet = new Set<string>();
+    platformHistory.forEach(r => platformSet.add(r.platform));
+    const platforms = Array.from(platformSet).sort();
+
+    // Build map: date -> { platform -> orderCount }
+    const byDate = new Map<string, Record<string, number>>();
+    platformHistory.forEach(r => {
+      if (!byDate.has(r.date)) byDate.set(r.date, {});
+      byDate.get(r.date)![r.platform] = r.orderCount;
+    });
+
+    // Generate last 7 days to fill gaps
+    const days: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      days.push(subDays(new Date(), i).toISOString().slice(0, 10));
+    }
+
+    const chartData = days.map(date => {
+      const dayData = byDate.get(date) ?? {};
+      const entry: Record<string, string | number> = {
+        date: format(new Date(date + "T12:00:00"), "EEE dd/MM", { locale: fr }),
+      };
+      platforms.forEach(p => { entry[p] = dayData[p] ?? 0; });
+      return entry;
+    });
+
+    return { chartData, platforms };
+  }, [platformHistory]);
 
   useNewOrderAlert(pendingOrders?.length);
 
@@ -223,6 +264,46 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* Platform 7-day history chart */}
+        <Card className="glass border-white/5 border-t-2 border-t-purple-500 shadow-[0_-2px_10px_-2px_rgba(168,85,247,0.2)]">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400">
+                  <LineChartIcon className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Évolution par plateforme · 7 derniers jours</h3>
+              </div>
+            </div>
+            {loadingHistory ? (
+              <Skeleton className="h-48 w-full bg-white/5 rounded-xl" />
+            ) : chartData.length === 0 ? (
+              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">Aucune donnée disponible</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10 }}
+                    labelStyle={{ color: "rgba(255,255,255,0.7)", fontWeight: 600 }}
+                    itemStyle={{ color: "rgba(255,255,255,0.6)" }}
+                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }} />
+                  {platforms.map((platform, i) => {
+                    const colors = ["#a855f7", "#6366f1", "#ec4899", "#f97316", "#22d3ee", "#84cc16", "#f59e0b"];
+                    return (
+                      <Bar key={platform} dataKey={platform} stackId="a" fill={colors[i % colors.length]} radius={i === platforms.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} maxBarSize={48} />
+                    );
+                  })}
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Action Area - Pending Orders */}

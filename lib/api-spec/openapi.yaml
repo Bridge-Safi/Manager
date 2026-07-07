@@ -529,6 +529,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/DriverStats"
 
+  /dashboard/platform-history:
+    get:
+      operationId: getPlatformHistory
+      tags: [dashboard]
+      summary: Orders and revenue per platform per day for the last 7 days
+      responses:
+        "200":
+          description: Per-platform daily history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformHistoryDay"
+
   /dashboard/platform-stats:
     get:
       operationId: getPlatformStats
@@ -2027,6 +2042,23 @@ components:
       required:
         - uniqueCustomers
         - topCustomers
+
+    PlatformHistoryDay:
+      type: object
+      properties:
+        date:
+          type: string
+        platform:
+          type: string
+        orderCount:
+          type: integer
+        revenue:
+          type: number
+      required:
+        - date
+        - platform
+        - orderCount
+        - revenue
 
     PlatformStat:
       type: object

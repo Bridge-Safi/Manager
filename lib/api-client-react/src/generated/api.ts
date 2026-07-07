@@ -18,6 +18,7 @@ import type {
 
 import type {
   AcceptDeliveryBody,
+  PlatformHistoryDay,
   AcceptOrderInput,
   AcceptRideBody,
   Activity,
@@ -2307,6 +2308,77 @@ export function useGetPlatformStats<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetPlatformStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Orders and revenue per platform per day for the last 7 days
+ */
+export const getGetPlatformHistoryUrl = () => {
+  return `/api/dashboard/platform-history`;
+};
+
+export const getPlatformHistory = async (
+  options?: RequestInit,
+): Promise<PlatformHistoryDay[]> => {
+  return customFetch<PlatformHistoryDay[]>(getGetPlatformHistoryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPlatformHistoryQueryKey = () => {
+  return [`/api/dashboard/platform-history`] as const;
+};
+
+export const getGetPlatformHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlatformHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPlatformHistoryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPlatformHistory>>
+  > = ({ signal }) => getPlatformHistory({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPlatformHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlatformHistory>>
+>;
+export type GetPlatformHistoryQueryError = ErrorType<unknown>;
+
+export function useGetPlatformHistory<
+  TData = Awaited<ReturnType<typeof getPlatformHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPlatformHistoryQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
