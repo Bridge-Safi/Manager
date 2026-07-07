@@ -1,0 +1,3 @@
+- [Auth architecture](auth-arch.md) — JWT for restaurants via SESSION_SECRET; setAuthTokenGetter wires client; SSE can't Bearer (EventSource limitation)
+- [Status mapping](status-mapping.md) — Bridge Manager statuses: pending→assigned→in_delivery→delivered; restaurateurs-codebase used accepted/ready (now aligned)
+- [SSE event names](sse-events.md) — new_order = restaurant SSE; order:created = internal; both emitted on webhook; EventSource routes must stay unauthenticated
