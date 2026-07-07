@@ -56,7 +56,13 @@ function ServiceBadge({ type }: { type: string }) {
 }
 
 function PlatformBadge({ platform }: { platform?: string | null }) {
-  if (!platform) return <span className="text-xs font-mono text-muted-foreground/40">—</span>;
+  if (!platform) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-white/5 text-muted-foreground/50 border-white/10">
+        Manuel
+      </span>
+    );
+  }
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${getPlatformColor(platform)}`}>
       <Store className="w-3 h-3" />

@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useListDrivers, useUpdateOrder, getListOrdersQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { Order, OrderStatus } from "@workspace/api-client-react";
-import { Loader2, AlertCircle, MapPin, Star, Info } from "lucide-react";
+import { Loader2, AlertCircle, MapPin, Star, Info, Store } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -83,10 +83,24 @@ export function AssignDriverDialog({ order, onClose }: AssignDriverDialogProps) 
       <DialogContent className="sm:max-w-[550px] border-white/10 bg-background/80 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
         <DialogHeader className="pb-4 border-b border-white/5">
           <DialogTitle className="text-2xl font-display tracking-tight">Assigner un livreur</DialogTitle>
-          <DialogDescription className="text-sm mt-2">
-            Commande <span className="font-display font-bold text-primary px-1">#{order?.orderNumber}</span> 
-            <span className="mx-2 opacity-50">•</span> 
-            <span className="text-foreground font-medium">{order?.customerName}</span>
+          <DialogDescription asChild>
+            <div className="flex items-center flex-wrap gap-2 mt-2">
+              <span className="text-sm">
+                Commande <span className="font-display font-bold text-primary px-1">#{order?.orderNumber}</span>
+                <span className="mx-2 opacity-50">•</span>
+                <span className="text-foreground font-medium">{order?.customerName}</span>
+              </span>
+              {order?.platform ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-orange-500/20 text-orange-300 border-orange-500/30">
+                  <Store className="w-3 h-3" />
+                  {order.platform}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-white/5 text-muted-foreground/50 border-white/10">
+                  Manuel
+                </span>
+              )}
+            </div>
           </DialogDescription>
         </DialogHeader>
 
