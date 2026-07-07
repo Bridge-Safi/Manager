@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { logActivity } from "../lib/log-activity";
 import bcrypt from "bcryptjs";
+import { syncDriverToLivreurs } from "../lib/sync-livreurs";
 
 const router = Router();
 
@@ -91,6 +92,19 @@ router.post("/", async (req, res) => {
     details: `${driver.name} a rejoint la flotte`,
   });
 
+            await syncDriverToLivreurs({
+              id: driver.id,
+              name: driver.name,
+              phone: driver.phone,
+              email: driver.email,
+              vehicleType: driver.vehicleType,
+              services: driver.services,
+              hashedPassword,
+              rating: driver.rating,
+              avatarUrl: driver.avatarUrl,
+              isBlocked: driver.isBlocked,
+            });
+
   res.status(201).json({ ...formatDriver(driver), plainPassword });
 });
 
@@ -153,6 +167,19 @@ router.patch("/:id", async (req, res) => {
     .set(bodyParsed.data)
     .where(eq(driversTable.id, paramParsed.data.id))
     .returning();
+
+  await syncDriverToLivreurs({
+    id: updated.id,
+    name: updated.name,
+    phone: updated.phone,
+    email: updated.email,
+    vehicleType: updated.vehicleType,
+    services: updated.services,
+    hashedPassword: updated.password,
+    rating: updated.rating,
+    avatarUrl: updated.avatarUrl,
+    isBlocked: updated.isBlocked,
+  });
 
   if (bodyParsed.data.status && bodyParsed.data.status !== existing.status) {
     const actionMap: Record<string, string> = {
