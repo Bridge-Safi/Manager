@@ -15,4 +15,5 @@ export const OrderServiceType = {
   confort: "confort",
   tabac: "tabac",
   fleur: "fleur",
+  pharmacie: "pharmacie",
 } as const;

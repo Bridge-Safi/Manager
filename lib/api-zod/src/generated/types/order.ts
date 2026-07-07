@@ -18,6 +18,7 @@ export interface Order {
   totalAmount: number;
   status: OrderStatus;
   serviceType: OrderServiceType;
+  platform?: string | null;
   driverId?: number | null;
   driverName?: string | null;
   sourceUrl?: string | null;

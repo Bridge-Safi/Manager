@@ -1,7 +1,12 @@
 import { Router } from "express";
 import { db, driversTable, ordersTable } from "@workspace/db";
-import { eq, and, desc, sql, gte } from "drizzle-orm";
+import { eq, and, desc, sql, gte, notInArray } from "drizzle-orm";
 import { emitEvent } from "../lib/event-bus";
+
+// Ces types de service sont des livraisons à pied/moto — les livreurs les reçoivent
+const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "pharmacie"] as const;
+// Ces types sont réservés aux chauffeurs (taxi/VTC) — jamais envoyés aux livreurs
+const TAXI_SERVICE_TYPES = ["taxi", "confort"];
 
 const router = Router();
 
@@ -99,7 +104,10 @@ router.get("/pending-dispatch", async (req, res) => {
     .where(
       and(
         eq(ordersTable.driverId, delivererId),
-        eq(ordersTable.status, "pending")
+        eq(ordersTable.status, "pending"),
+        // Seules les commandes de livraison sont envoyées aux livreurs
+        // Les commandes taxi/confort vont aux chauffeurs — jamais aux livreurs
+        notInArray(ordersTable.serviceType, TAXI_SERVICE_TYPES)
       )
     )
     .orderBy(desc(ordersTable.createdAt))
@@ -125,17 +133,20 @@ router.get("/", async (req, res) => {
   const delivererId = req.query.delivererId ? Number(req.query.delivererId) : null;
   const statusParam = req.query.status as string | undefined;
 
-  const conditions = [];
+  // Toujours exclure les commandes taxi/confort de la vue livreur
+  const conditions: ReturnType<typeof eq>[] = [
+    notInArray(ordersTable.serviceType, TAXI_SERVICE_TYPES) as ReturnType<typeof eq>,
+  ];
   if (delivererId) conditions.push(eq(ordersTable.driverId, delivererId));
   if (statusParam) {
     const dbStatus = reverseMapStatus(statusParam);
-    conditions.push(sql`${ordersTable.status} = ${dbStatus}`);
+    conditions.push(sql`${ordersTable.status} = ${dbStatus}` as ReturnType<typeof eq>);
   }
 
   const rows = await db
     .select()
     .from(ordersTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(desc(ordersTable.createdAt));
 
   res.json(rows.map(formatDelivery));

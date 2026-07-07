@@ -51,6 +51,7 @@ router.get("/", async (req, res) => {
       totalAmount: ordersTable.totalAmount,
       status: ordersTable.status,
       serviceType: ordersTable.serviceType,
+      platform: ordersTable.platform,
       driverId: ordersTable.driverId,
       sourceUrl: ordersTable.sourceUrl,
       notes: ordersTable.notes,
@@ -121,6 +122,7 @@ router.get("/:id", async (req, res) => {
       totalAmount: ordersTable.totalAmount,
       status: ordersTable.status,
       serviceType: ordersTable.serviceType,
+      platform: ordersTable.platform,
       driverId: ordersTable.driverId,
       sourceUrl: ordersTable.sourceUrl,
       notes: ordersTable.notes,
@@ -402,6 +404,8 @@ router.post("/webhook", async (req, res) => {
   const items = typeof rawItems === "string" ? rawItems : JSON.stringify(rawItems ?? []);
   const notes = (body.notes ?? body.comment ?? body.message) as string | undefined;
   const sourceUrl = (body.sourceUrl ?? body.source_url ?? req.headers["origin"] ?? req.headers["referer"]) as string | undefined;
+  const platform = (body.platform ?? body.platformName ?? body.platform_name) as string | undefined;
+  const serviceType = (body.serviceType ?? body.service_type) as string | undefined;
   const orderNumber = (body.orderNumber ?? body.order_number ?? body.id) as string | undefined;
 
   if (!customerName || !customerPhone || !deliveryAddress || !totalAmount) {
@@ -415,6 +419,9 @@ router.post("/webhook", async (req, res) => {
 
   const finalOrderNumber = orderNumber ?? generateOrderNumber();
 
+  const validServiceTypes = ["nourriture", "taxi", "confort", "tabac", "fleur", "pharmacie"];
+  const resolvedServiceType = serviceType && validServiceTypes.includes(serviceType) ? serviceType : "nourriture";
+
   const [order] = await db
     .insert(ordersTable)
     .values({
@@ -425,6 +432,8 @@ router.post("/webhook", async (req, res) => {
       items,
       totalAmount,
       status: "pending",
+      serviceType: resolvedServiceType,
+      platform: platform ?? null,
       notes: notes ?? null,
       sourceUrl: sourceUrl ?? null,
     })

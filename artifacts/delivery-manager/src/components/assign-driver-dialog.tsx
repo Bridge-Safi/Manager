@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useListDrivers, useUpdateOrder, getListOrdersQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { Order, OrderStatus } from "@workspace/api-client-react";
-import { Loader2, AlertCircle, MapPin, Star } from "lucide-react";
+import { Loader2, AlertCircle, MapPin, Star, Info } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -57,8 +57,26 @@ export function AssignDriverDialog({ order, onClose }: AssignDriverDialogProps) 
     });
   };
 
-  const availableDrivers = drivers?.filter(d => d.status === "available") || [];
-  const busyDrivers = drivers?.filter(d => d.status === "busy") || [];
+  // Types de service livreur (livraison à pied/moto)
+  const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "pharmacie"];
+  // Types de service chauffeur (taxi / VTC)
+  const TAXI_SERVICE_TYPES = ["taxi", "confort"];
+
+  const isDeliveryOrder = order ? DELIVERY_SERVICE_TYPES.includes(order.serviceType) : true;
+  const isTaxiOrder = order ? TAXI_SERVICE_TYPES.includes(order.serviceType) : false;
+
+  // Filtrer les livreurs selon le type de commande :
+  // - commande livraison → exclure les chauffeurs taxi/confort
+  // - commande taxi → exclure les livreurs de colis
+  const eligibleDrivers = (drivers ?? []).filter(d => {
+    const driverService = (d.services ?? "nourriture").toLowerCase();
+    if (isDeliveryOrder) return !TAXI_SERVICE_TYPES.some(t => driverService.includes(t));
+    if (isTaxiOrder) return TAXI_SERVICE_TYPES.some(t => driverService.includes(t));
+    return true;
+  });
+
+  const availableDrivers = eligibleDrivers.filter(d => d.status === "available");
+  const busyDrivers = eligibleDrivers.filter(d => d.status === "busy");
 
   return (
     <Dialog open={!!order} onOpenChange={(open) => !open && onClose()}>
@@ -73,16 +91,27 @@ export function AssignDriverDialog({ order, onClose }: AssignDriverDialogProps) 
         </DialogHeader>
 
         <div className="py-2">
+          {/* Bannière d'information sur le filtre actif */}
+          {isDeliveryOrder && (
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary/80">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>
+                Commande <strong>livraison</strong> — seuls les livreurs compatibles (moto, vélo, scooter) sont affichés.
+                Les chauffeurs taxi/confort sont exclus.
+              </span>
+            </div>
+          )}
           {loadingDrivers ? (
             <div className="flex justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : drivers?.length === 0 ? (
+          ) : eligibleDrivers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground flex flex-col items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                 <AlertCircle className="w-6 h-6 opacity-50" />
               </div>
-              <p className="font-display text-lg">Aucun livreur trouvé.</p>
+              <p className="font-display text-lg">Aucun livreur disponible.</p>
+              <p className="text-xs opacity-60">Aucun livreur de livraison n'est enregistré.</p>
             </div>
           ) : (
             <ScrollArea className="h-[350px] pr-4 -mr-4">

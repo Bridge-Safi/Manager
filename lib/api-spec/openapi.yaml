@@ -1617,7 +1617,10 @@ components:
           enum: [pending, assigned, in_delivery, delivered, cancelled]
         serviceType:
           type: string
-          enum: [nourriture, taxi, confort, tabac, fleur]
+          enum: [nourriture, taxi, confort, tabac, fleur, pharmacie]
+        platform:
+          type: string
+          nullable: true
         driverId:
           type: integer
           nullable: true
@@ -1664,7 +1667,9 @@ components:
           type: number
         serviceType:
           type: string
-          enum: [nourriture, taxi, confort, tabac, fleur]
+          enum: [nourriture, taxi, confort, tabac, fleur, pharmacie]
+        platform:
+          type: string
         notes:
           type: string
         sourceUrl:
@@ -1685,7 +1690,7 @@ components:
           enum: [pending, assigned, in_delivery, delivered, cancelled]
         serviceType:
           type: string
-          enum: [nourriture, taxi, confort, tabac, fleur]
+          enum: [nourriture, taxi, confort, tabac, fleur, pharmacie]
         driverId:
           type: integer
           nullable: true

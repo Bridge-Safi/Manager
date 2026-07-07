@@ -14,6 +14,7 @@ export const ordersTable = pgTable("orders", {
   totalAmount: real("total_amount").notNull(),
   status: text("status").notNull().default("pending"),
   serviceType: text("service_type").notNull().default("nourriture"),
+  platform: text("platform"),
   driverId: integer("driver_id").references(() => driversTable.id),
   restaurantId: integer("restaurant_id").references(() => restaurantsTable.id),
   sourceUrl: text("source_url"),

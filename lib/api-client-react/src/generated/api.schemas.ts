@@ -28,6 +28,7 @@ export const OrderServiceType = {
   confort: "confort",
   tabac: "tabac",
   fleur: "fleur",
+  pharmacie: "pharmacie",
 } as const;
 
 export interface Order {
@@ -40,6 +41,7 @@ export interface Order {
   totalAmount: number;
   status: OrderStatus;
   serviceType: OrderServiceType;
+  platform?: string | null;
   driverId?: number | null;
   driverName?: string | null;
   sourceUrl?: string | null;
@@ -57,6 +59,7 @@ export const CreateOrderBodyServiceType = {
   confort: "confort",
   tabac: "tabac",
   fleur: "fleur",
+  pharmacie: "pharmacie",
 } as const;
 
 export interface CreateOrderBody {
@@ -67,6 +70,7 @@ export interface CreateOrderBody {
   items: string;
   totalAmount: number;
   serviceType?: CreateOrderBodyServiceType;
+  platform?: string;
   notes?: string;
   sourceUrl?: string;
 }
@@ -91,6 +95,7 @@ export const UpdateOrderBodyServiceType = {
   confort: "confort",
   tabac: "tabac",
   fleur: "fleur",
+  pharmacie: "pharmacie",
 } as const;
 
 export interface UpdateOrderBody {

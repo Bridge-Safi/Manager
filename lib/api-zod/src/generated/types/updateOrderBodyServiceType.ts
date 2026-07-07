@@ -15,4 +15,5 @@ export const UpdateOrderBodyServiceType = {
   confort: "confort",
   tabac: "tabac",
   fleur: "fleur",
+  pharmacie: "pharmacie",
 } as const;

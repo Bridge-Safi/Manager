@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useListOrders, useUpdateOrder, getListOrdersQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { OrderStatusBadge } from "@/components/status-badges";
 import { AssignDriverDialog } from "@/components/assign-driver-dialog";
 import { NewOrderDialog } from "@/components/new-order-dialog";
 import { Order, OrderStatus } from "@workspace/api-client-react";
-import { Search, MoreVertical, MapPin, Phone, Loader2, Plus, Bell, Clock, ChevronRight } from "lucide-react";
+import { Search, MoreVertical, MapPin, Phone, Loader2, Plus, Bell, Clock, ChevronRight, ExternalLink, Store, Globe } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,7 +27,24 @@ const SERVICE_LABELS: Record<string, { label: string; emoji: string; color: stri
   confort:    { label: "Confort",    emoji: "🚘", color: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
   tabac:      { label: "Tabac",      emoji: "🚬", color: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30" },
   fleur:      { label: "Fleurs",     emoji: "🌸", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+  pharmacie:  { label: "Pharmacie",  emoji: "💊", color: "bg-green-500/20 text-green-300 border-green-500/30" },
 };
+
+// Platform badge colours — deterministic by name prefix
+const PLATFORM_COLORS: Array<{ match: string; color: string }> = [
+  { match: "eat",       color: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
+  { match: "fleur",     color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+  { match: "tabac",     color: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30" },
+  { match: "pharmacie", color: "bg-green-500/20 text-green-300 border-green-500/30" },
+];
+
+function getPlatformColor(platform: string) {
+  const lower = platform.toLowerCase();
+  return (
+    PLATFORM_COLORS.find((p) => lower.includes(p.match))?.color ??
+    "bg-purple-500/20 text-purple-300 border-purple-500/30"
+  );
+}
 
 function ServiceBadge({ type }: { type: string }) {
   const s = SERVICE_LABELS[type] ?? { label: type, emoji: "📦", color: "bg-white/10 text-muted-foreground border-white/10" };
@@ -37,11 +55,149 @@ function ServiceBadge({ type }: { type: string }) {
   );
 }
 
+function PlatformBadge({ platform }: { platform?: string | null }) {
+  if (!platform) return <span className="text-xs font-mono text-muted-foreground/40">—</span>;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${getPlatformColor(platform)}`}>
+      <Store className="w-3 h-3" />
+      {platform}
+    </span>
+  );
+}
+
+function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: () => void }) {
+  if (!order) return null;
+  const s = SERVICE_LABELS[order.serviceType] ?? { label: order.serviceType, emoji: "📦", color: "" };
+  return (
+    <Sheet open={!!order} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="bg-background/95 backdrop-blur-xl border-white/10 w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader className="mb-6">
+          <SheetTitle className="font-display text-2xl flex items-center gap-2">
+            <span className="text-primary font-mono">#{order.orderNumber}</span>
+          </SheetTitle>
+          <div className="text-xs text-muted-foreground font-mono">
+            {format(new Date(order.createdAt), "dd MMM yyyy, HH:mm", { locale: fr })}
+          </div>
+        </SheetHeader>
+
+        <div className="space-y-5">
+          {/* Origin section */}
+          <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-sans font-medium flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5" /> Origine
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Plateforme</span>
+                <PlatformBadge platform={order.platform} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Service</span>
+                <ServiceBadge type={order.serviceType} />
+              </div>
+              {order.sourceUrl && (() => {
+                const isSafeUrl = /^https?:\/\//i.test(order.sourceUrl ?? "");
+                const displayUrl = (order.sourceUrl ?? "").replace(/^https?:\/\//i, "").slice(0, 40);
+                return (
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs text-muted-foreground shrink-0">Site source</span>
+                    {isSafeUrl ? (
+                      <a
+                        href={order.sourceUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-mono text-primary/80 hover:text-primary truncate flex items-center gap-1 transition-colors"
+                        title={order.sourceUrl!}
+                      >
+                        {displayUrl}{(order.sourceUrl ?? "").length > 43 ? "…" : ""}
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-xs font-mono text-muted-foreground truncate" title={order.sourceUrl!}>
+                        {displayUrl}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Customer */}
+          <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-sans font-medium flex items-center gap-1.5">
+              <Phone className="w-3.5 h-3.5" /> Client
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Nom</span>
+                <span className="text-sm font-medium">{order.customerName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Téléphone</span>
+                <span className="text-sm font-mono text-primary">{order.customerPhone}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery */}
+          <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-sans font-medium flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" /> Livraison
+            </h3>
+            <p className="text-sm text-foreground/80">{order.deliveryAddress}</p>
+          </div>
+
+          {/* Items */}
+          <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-sans font-medium">Articles</h3>
+            <p className="text-sm text-foreground/80 whitespace-pre-wrap">{order.items}</p>
+          </div>
+
+          {/* Amount + status */}
+          <div className="flex gap-3">
+            <div className="flex-1 rounded-xl border border-white/10 bg-black/20 p-4 text-center">
+              <div className="text-xs text-muted-foreground mb-1">Montant</div>
+              <div className="font-display font-bold text-xl">
+                {order.totalAmount.toFixed(2)}
+                <span className="text-xs font-sans text-muted-foreground ml-1">MAD</span>
+              </div>
+            </div>
+            <div className="flex-1 rounded-xl border border-white/10 bg-black/20 p-4 text-center">
+              <div className="text-xs text-muted-foreground mb-1">Statut</div>
+              <OrderStatusBadge status={order.status} />
+            </div>
+          </div>
+
+          {/* Driver */}
+          {order.driverName && (
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-2">
+              <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-sans font-medium">Livreur</h3>
+              <span className="text-sm font-medium border border-white/10 bg-black/20 px-2 py-1 rounded-md">
+                {order.driverName}
+              </span>
+            </div>
+          )}
+
+          {/* Notes */}
+          {order.notes && (
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-2">
+              <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-sans font-medium">Notes</h3>
+              <p className="text-sm text-foreground/70 whitespace-pre-wrap">{order.notes}</p>
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [newOrderOpen, setNewOrderOpen] = useState(false);
 
   const queryClient = useQueryClient();
@@ -75,7 +231,8 @@ export default function OrdersPage() {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerPhone.includes(searchTerm);
+      order.customerPhone.includes(searchTerm) ||
+      (order.platform ?? "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesService = serviceFilter === "all" || order.serviceType === serviceFilter;
     return matchesSearch && matchesStatus && matchesService;
@@ -155,8 +312,15 @@ export default function OrdersPage() {
                         {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true, locale: fr })}
                       </div>
                     </div>
-                    <div className="font-display font-bold text-amber-400 text-lg">
-                      {order.totalAmount.toFixed(2)} <span className="text-xs font-sans font-normal text-muted-foreground">MAD</span>
+                    <div className="text-right">
+                      <div className="font-display font-bold text-amber-400 text-lg">
+                        {order.totalAmount.toFixed(2)} <span className="text-xs font-sans font-normal text-muted-foreground">MAD</span>
+                      </div>
+                      {order.platform && (
+                        <div className="mt-1">
+                          <PlatformBadge platform={order.platform} />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -174,14 +338,24 @@ export default function OrdersPage() {
                       {order.items}
                     </div>
                   )}
-                  <Button
-                    size="sm"
-                    onClick={() => setSelectedOrder(order)}
-                    className="w-full bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/30 transition-all font-semibold"
-                  >
-                    Choisir un livreur
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setDetailOrder(order)}
+                      className="bg-white/5 text-muted-foreground hover:bg-white/10 border border-white/10 transition-all text-xs"
+                    >
+                      Détails
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => setSelectedOrder(order)}
+                      className="flex-1 bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/30 transition-all font-semibold"
+                    >
+                      Choisir un livreur
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -195,7 +369,7 @@ export default function OrdersPage() {
               <div className="relative w-full sm:max-w-md group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
-                  placeholder="Rechercher (N°, Client, Tél)..."
+                  placeholder="Rechercher (N°, Client, Tél, Plateforme)..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 bg-black/40 border-white/10 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all font-mono text-sm h-11"
@@ -213,6 +387,7 @@ export default function OrdersPage() {
                     <SelectItem value="confort">🚘 Confort</SelectItem>
                     <SelectItem value="tabac">🚬 Tabac</SelectItem>
                     <SelectItem value="fleur">🌸 Fleurs</SelectItem>
+                    <SelectItem value="pharmacie">💊 Pharmacie</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -237,6 +412,7 @@ export default function OrdersPage() {
                   <TableRow className="border-none hover:bg-transparent">
                     <TableHead className="w-[50px] font-sans text-xs tracking-wider text-muted-foreground/70 text-center">#</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Commande</TableHead>
+                    <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Plateforme</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Service</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Client</TableHead>
                     <TableHead className="font-sans text-xs tracking-wider uppercase text-muted-foreground">Adresse</TableHead>
@@ -250,13 +426,13 @@ export default function OrdersPage() {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="h-40 text-center">
+                      <TableCell colSpan={11} className="h-40 text-center">
                         <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="h-40 text-center text-muted-foreground font-display text-lg">
+                      <TableCell colSpan={11} className="h-40 text-center text-muted-foreground font-display text-lg">
                         Aucune commande trouvée.
                       </TableCell>
                     </TableRow>
@@ -265,9 +441,10 @@ export default function OrdersPage() {
                       <TableRow
                         key={order.id}
                         className={cn(
-                          "border-b border-white/5 hover:bg-white/[0.02] transition-colors group",
+                          "border-b border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer",
                           order.status === "pending" && "bg-amber-500/5"
                         )}
+                        onClick={() => setDetailOrder(order)}
                       >
                         <TableCell className="text-center text-xs text-muted-foreground/30 font-mono">
                           {(index + 1).toString().padStart(2, "0")}
@@ -277,6 +454,9 @@ export default function OrdersPage() {
                           <div className="text-[11px] font-mono text-muted-foreground/70 mt-1">
                             {format(new Date(order.createdAt), "HH:mm")}
                           </div>
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <PlatformBadge platform={order.platform} />
                         </TableCell>
                         <TableCell>
                           <ServiceBadge type={order.serviceType} />
@@ -317,7 +497,7 @@ export default function OrdersPage() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           {order.status === "pending" ? (
                             <Button
                               size="sm"
@@ -367,6 +547,11 @@ export default function OrdersPage() {
       <NewOrderDialog
         open={newOrderOpen}
         onClose={() => setNewOrderOpen(false)}
+      />
+
+      <OrderDetailSheet
+        order={detailOrder}
+        onClose={() => setDetailOrder(null)}
       />
     </Layout>
   );

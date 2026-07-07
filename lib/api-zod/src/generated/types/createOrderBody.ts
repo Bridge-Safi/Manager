@@ -15,6 +15,7 @@ export interface CreateOrderBody {
   items: string;
   totalAmount: number;
   serviceType?: CreateOrderBodyServiceType;
+  platform?: string;
   notes?: string;
   sourceUrl?: string;
 }
