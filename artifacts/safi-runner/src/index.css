@@ -1,0 +1,47 @@
+/* Police cartoon style Subway Surfers — DOIT être en premier */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Bangers&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #0a0a2e;
+    color: white;
+    font-family: 'Fredoka', 'Segoe UI', sans-serif;
+    overflow: hidden;
+  }
+
+  #root {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .font-cartoon {
+    font-family: 'Bangers', 'Fredoka', sans-serif;
+    letter-spacing: 2px;
+  }
+
+  .font-fredoka {
+    font-family: 'Fredoka', sans-serif;
+  }
+
+  /* Style bouton cartoon Subway Surfers — contour noir épais */
+  .btn-cartoon {
+    border: 4px solid #1a1a1a;
+    box-shadow: 0 4px 0 #1a1a1a, 0 8px 12px rgba(0,0,0,0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .btn-cartoon:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #1a1a1a, 0 4px 8px rgba(0,0,0,0.4);
+  }
+}

@@ -1,0 +1,20 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Deep red background -->
+  <circle cx="96" cy="96" r="96" fill="#B91C1C"/>
+  <!-- Lighter red inner circle for depth -->
+  <circle cx="96" cy="96" r="84" fill="#DC2626"/>
+
+  <!-- Bell shape (white) -->
+  <!-- Bell dome -->
+  <path d="M96 32C72 32 53 51 53 75V114L40 127V135H152V127L139 114V75C139 51 120 32 96 32Z" fill="white"/>
+  <!-- Bell clapper -->
+  <ellipse cx="96" cy="143" rx="14" ry="11" fill="white"/>
+  <!-- Bell hanger -->
+  <rect x="88" y="24" width="16" height="16" rx="8" fill="white"/>
+
+  <!-- Urgency dot (top-right corner) — red on red, creates a subtle badge effect -->
+  <circle cx="148" cy="44" r="20" fill="#FCA5A5"/>
+  <circle cx="148" cy="44" r="14" fill="#EF4444"/>
+  <rect x="144" y="33" width="8" height="14" rx="4" fill="white"/>
+  <circle cx="148" cy="52" r="4" fill="white"/>
+</svg>

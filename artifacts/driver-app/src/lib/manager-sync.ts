@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback } from "react";
 
-const MANAGER_API_URL = "https://manager.safi-bridge.ma/api/livreur/sync";
-const MANAGER_API_KEY = "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32";
+// L'API Manager est dans le même workspace — appel relatif via le proxy Replit
+const MANAGER_API_URL = "/api/livreur/sync";
+const MANAGER_API_KEY = process.env.VITE_LIVREUR_API_KEY ?? "";
 const SYNC_INTERVAL_MS = 20_000;
 
 export interface ManagerSyncOptions {
@@ -42,12 +43,11 @@ async function syncToManager(payload: {
   if (payload.currentOrderId != null) body.currentOrderId = payload.currentOrderId;
   if (payload.currentOrderStatus != null) body.currentOrderStatus = payload.currentOrderStatus;
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (MANAGER_API_KEY) headers["x-api-key"] = MANAGER_API_KEY;
   await fetch(MANAGER_API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": MANAGER_API_KEY,
-    },
+    headers,
     body: JSON.stringify(body),
   });
 }

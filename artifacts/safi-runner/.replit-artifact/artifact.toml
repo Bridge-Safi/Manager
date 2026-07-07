@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/safi-runner/"
+title = "Safi Runner — 3D Infinite Runner"
+version = "1.0.0"
+id = "artifacts/safi-runner"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/safi-runner/" ]
+localPort = 20231
+
+[services.development]
+run = "pnpm --filter @workspace/safi-runner run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/safi-runner", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/safi-runner/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20231"
+BASE_PATH = "/safi-runner/"

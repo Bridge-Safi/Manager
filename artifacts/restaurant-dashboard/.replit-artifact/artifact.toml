@@ -1,0 +1,23 @@
+kind = "web"
+previewPath = "/restaurant-dashboard/"
+title = "Bridge Restaurant — Tableau de bord"
+version = "1.0.0"
+id = "artifacts/restaurant-dashboard"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/restaurant-dashboard/" ]
+localPort = 24567
+
+[services.development]
+run = "pnpm --filter @workspace/restaurant-dashboard run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/restaurant-dashboard", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/restaurant-dashboard/dist/public"

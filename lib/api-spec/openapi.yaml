@@ -19,6 +19,8 @@ tags:
   - name: restaurants
   - name: players
   - name: clients
+  - name: trips
+  - name: auth
 paths:
   /healthz:
     get:
@@ -1461,6 +1463,128 @@ paths:
         "200":
           description: OK
 
+  /orders/{id}/accept:
+    post:
+      operationId: acceptOrder
+      tags: [orders]
+      summary: Restaurant accepts a pending order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptOrderInput"
+      responses:
+        "200":
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}/reject:
+    post:
+      operationId: rejectOrder
+      tags: [orders]
+      summary: Restaurant rejects an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectOrderInput"
+      responses:
+        "200":
+          description: Order rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/recent:
+    get:
+      operationId: getRecentOrders
+      tags: [orders]
+      summary: Get recent orders (latest first)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /orders/stats:
+    get:
+      operationId: getOrderStats
+      tags: [orders]
+      summary: Get order count stats by status
+      responses:
+        "200":
+          description: Order stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderStats"
+
+  /trips/{id}/cancel:
+    post:
+      operationId: cancelTripByClient
+      tags: [trips]
+      summary: Cancel a trip by the client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripCancelInput"
+      responses:
+        "200":
+          description: Trip cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Get current authenticated user (Bearer JWT)
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Unauthorized
+
 components:
   schemas:
     HealthStatus:
@@ -2445,6 +2569,76 @@ components:
           type: string
         isVip:
           type: boolean
+
+    AcceptOrderInput:
+      type: object
+      properties:
+        note:
+          type: string
+
+    RejectOrderInput:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+        - reason
+
+    OrderStats:
+      type: object
+      properties:
+        pending:
+          type: integer
+        assigned:
+          type: integer
+        in_delivery:
+          type: integer
+        delivered:
+          type: integer
+        cancelled:
+          type: integer
+        total:
+          type: integer
+      required:
+        - pending
+        - assigned
+        - in_delivery
+        - delivered
+        - cancelled
+        - total
+
+    TripCancelInput:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [driver, restaurant]
+        token:
+          type: string
+        restaurantId:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - name
+        - phone
+        - type
+        - token
 
     # ── Delivery schemas ──────────────────────────────────────────────────────
     Delivery:

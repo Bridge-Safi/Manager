@@ -1814,3 +1814,166 @@ export const UpdateClientResponse = zod.object({
 export const DeleteClientParams = zod.object({
   id: zod.coerce.number(),
 });
+
+/**
+ * @summary Restaurant accepts a pending order
+ */
+export const AcceptOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptOrderBody = zod.object({
+  note: zod.string().optional(),
+});
+
+export const AcceptOrderResponse = zod.object({
+  id: zod.number(),
+  orderNumber: zod.string(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string(),
+  totalAmount: zod.number(),
+  status: zod.enum([
+    "pending",
+    "assigned",
+    "in_delivery",
+    "delivered",
+    "cancelled",
+  ]),
+  serviceType: zod.enum(["nourriture", "taxi", "confort", "tabac", "fleur"]),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  sourceUrl: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Restaurant rejects an order
+ */
+export const RejectOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RejectOrderBody = zod.object({
+  reason: zod.string(),
+});
+
+export const RejectOrderResponse = zod.object({
+  id: zod.number(),
+  orderNumber: zod.string(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string(),
+  totalAmount: zod.number(),
+  status: zod.enum([
+    "pending",
+    "assigned",
+    "in_delivery",
+    "delivered",
+    "cancelled",
+  ]),
+  serviceType: zod.enum(["nourriture", "taxi", "confort", "tabac", "fleur"]),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  sourceUrl: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Get recent orders (latest first)
+ */
+export const getRecentOrdersQueryLimitDefault = 20;
+
+export const GetRecentOrdersQueryParams = zod.object({
+  limit: zod.coerce.number().default(getRecentOrdersQueryLimitDefault),
+});
+
+export const GetRecentOrdersResponseItem = zod.object({
+  id: zod.number(),
+  orderNumber: zod.string(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  deliveryAddress: zod.string(),
+  items: zod.string(),
+  totalAmount: zod.number(),
+  status: zod.enum([
+    "pending",
+    "assigned",
+    "in_delivery",
+    "delivered",
+    "cancelled",
+  ]),
+  serviceType: zod.enum(["nourriture", "taxi", "confort", "tabac", "fleur"]),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  sourceUrl: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const GetRecentOrdersResponse = zod.array(GetRecentOrdersResponseItem);
+
+/**
+ * @summary Get order count stats by status
+ */
+export const GetOrderStatsResponse = zod.object({
+  pending: zod.number(),
+  assigned: zod.number(),
+  in_delivery: zod.number(),
+  delivered: zod.number(),
+  cancelled: zod.number(),
+  total: zod.number(),
+});
+
+/**
+ * @summary Cancel a trip by the client
+ */
+export const CancelTripByClientParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelTripByClientBody = zod.object({
+  reason: zod.string().optional(),
+});
+
+export const CancelTripByClientResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number().nullish(),
+  driverName: zod.string().nullish(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  fare: zod.number(),
+  offeredFare: zod.number().nullish(),
+  suggestedFare: zod.number().nullish(),
+  passengerOffer: zod.number().nullish(),
+  pricePerKm: zod.number().nullish(),
+  baseFare: zod.number().nullish(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  distance: zod.number().nullish(),
+  scheduledAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Get current authenticated user (Bearer JWT)
+ */
+export const GetAuthMeResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string().nullish(),
+  type: zod.enum(["driver", "restaurant"]),
+  token: zod.string(),
+  restaurantId: zod.number().nullish(),
+});

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, driversTable, ordersTable } from "@workspace/db";
 import { eq, and, desc, sql, gte } from "drizzle-orm";
 import { emitEvent } from "../lib/event-bus";
+import { requireRestaurantAuth } from "../lib/jwt-auth";
 
 const router = Router();
 
@@ -283,6 +284,29 @@ router.post("/:id/counter-offer", async (req, res) => {
   const trip = makeTripFromOrder(row);
   trip.offeredFare = offeredFare as number;
   res.json(trip);
+});
+
+// POST /trips/:id/cancel — annulation par le client (JWT requis)
+router.post("/:id/cancel", requireRestaurantAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  const { reason } = req.body as { reason?: string };
+
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, id));
+  if (!order) { res.status(404).json({ error: "Trip not found" }); return; }
+
+  const [updated] = await db
+    .update(ordersTable)
+    .set({
+      status: "cancelled",
+      updatedAt: new Date(),
+      notes: reason ? `Annulé par le client: ${reason}` : "Annulé par le client",
+    })
+    .where(eq(ordersTable.id, id))
+    .returning();
+
+  emitEvent("order:updated", { id: updated.id, orderNumber: updated.orderNumber, status: "cancelled" });
+
+  res.json(makeTripFromOrder(updated));
 });
 
 export default router;

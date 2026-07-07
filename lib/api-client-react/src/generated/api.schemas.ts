@@ -562,6 +562,44 @@ export interface UpdateClientBody {
   isVip?: boolean;
 }
 
+export interface AcceptOrderInput {
+  note?: string;
+}
+
+export interface RejectOrderInput {
+  reason: string;
+}
+
+export interface OrderStats {
+  pending: number;
+  assigned: number;
+  in_delivery: number;
+  delivered: number;
+  cancelled: number;
+  total: number;
+}
+
+export interface TripCancelInput {
+  reason?: string;
+}
+
+export type AuthUserType = (typeof AuthUserType)[keyof typeof AuthUserType];
+
+export const AuthUserType = {
+  driver: "driver",
+  restaurant: "restaurant",
+} as const;
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  phone: string;
+  email?: string | null;
+  type: AuthUserType;
+  token: string;
+  restaurantId?: number | null;
+}
+
 export type DeliveryStatus =
   (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
 
@@ -877,4 +915,8 @@ export type GetTripStatsParams = {
 
 export type GetMyPendingRideParams = {
   driverId: number;
+};
+
+export type GetRecentOrdersParams = {
+  limit?: number;
 };

@@ -18,9 +18,11 @@ import type {
 
 import type {
   AcceptDeliveryBody,
+  AcceptOrderInput,
   AcceptRideBody,
   Activity,
   Alert,
+  AuthUser,
   Client,
   ClientFromOrders,
   ClientsStats,
@@ -49,6 +51,7 @@ import type {
   GetDriverReviewsParams,
   GetMyPendingDispatchParams,
   GetMyPendingRideParams,
+  GetRecentOrdersParams,
   GetTripStatsParams,
   HealthStatus,
   ListActivitiesParams,
@@ -57,6 +60,7 @@ import type {
   ListResetRequestsParams,
   ListTripsParams,
   Order,
+  OrderStats,
   PaymentSummary,
   PendingCount,
   PendingDispatch,
@@ -68,6 +72,7 @@ import type {
   RecordDriverRefusalBody,
   RefuseDeliveryBody,
   RefuseRideBody,
+  RejectOrderInput,
   ResetRequest,
   Restaurant,
   RestaurantOverview,
@@ -75,6 +80,7 @@ import type {
   Review,
   ToggleBlockDriverBody,
   Trip,
+  TripCancelInput,
   TripStats,
   UpdateClientBody,
   UpdateDeliveryBody,
@@ -6138,3 +6144,498 @@ export const useDeleteClient = <
 > => {
   return useMutation(getDeleteClientMutationOptions(options));
 };
+
+/**
+ * @summary Restaurant accepts a pending order
+ */
+export const getAcceptOrderUrl = (id: number) => {
+  return `/api/orders/${id}/accept`;
+};
+
+export const acceptOrder = async (
+  id: number,
+  acceptOrderInput: AcceptOrderInput,
+  options?: RequestInit,
+): Promise<Order> => {
+  return customFetch<Order>(getAcceptOrderUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(acceptOrderInput),
+  });
+};
+
+export const getAcceptOrderMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptOrder>>,
+    TError,
+    { id: number; data: BodyType<AcceptOrderInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptOrder>>,
+  TError,
+  { id: number; data: BodyType<AcceptOrderInput> },
+  TContext
+> => {
+  const mutationKey = ["acceptOrder"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptOrder>>,
+    { id: number; data: BodyType<AcceptOrderInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return acceptOrder(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptOrder>>
+>;
+export type AcceptOrderMutationBody = BodyType<AcceptOrderInput>;
+export type AcceptOrderMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Restaurant accepts a pending order
+ */
+export const useAcceptOrder = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptOrder>>,
+    TError,
+    { id: number; data: BodyType<AcceptOrderInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof acceptOrder>>,
+  TError,
+  { id: number; data: BodyType<AcceptOrderInput> },
+  TContext
+> => {
+  return useMutation(getAcceptOrderMutationOptions(options));
+};
+
+/**
+ * @summary Restaurant rejects an order
+ */
+export const getRejectOrderUrl = (id: number) => {
+  return `/api/orders/${id}/reject`;
+};
+
+export const rejectOrder = async (
+  id: number,
+  rejectOrderInput: RejectOrderInput,
+  options?: RequestInit,
+): Promise<Order> => {
+  return customFetch<Order>(getRejectOrderUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(rejectOrderInput),
+  });
+};
+
+export const getRejectOrderMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectOrder>>,
+    TError,
+    { id: number; data: BodyType<RejectOrderInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof rejectOrder>>,
+  TError,
+  { id: number; data: BodyType<RejectOrderInput> },
+  TContext
+> => {
+  const mutationKey = ["rejectOrder"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof rejectOrder>>,
+    { id: number; data: BodyType<RejectOrderInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return rejectOrder(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RejectOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof rejectOrder>>
+>;
+export type RejectOrderMutationBody = BodyType<RejectOrderInput>;
+export type RejectOrderMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Restaurant rejects an order
+ */
+export const useRejectOrder = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectOrder>>,
+    TError,
+    { id: number; data: BodyType<RejectOrderInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof rejectOrder>>,
+  TError,
+  { id: number; data: BodyType<RejectOrderInput> },
+  TContext
+> => {
+  return useMutation(getRejectOrderMutationOptions(options));
+};
+
+/**
+ * @summary Get recent orders (latest first)
+ */
+export const getGetRecentOrdersUrl = (params?: GetRecentOrdersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/orders/recent?${stringifiedParams}`
+    : `/api/orders/recent`;
+};
+
+export const getRecentOrders = async (
+  params?: GetRecentOrdersParams,
+  options?: RequestInit,
+): Promise<Order[]> => {
+  return customFetch<Order[]>(getGetRecentOrdersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRecentOrdersQueryKey = (params?: GetRecentOrdersParams) => {
+  return [`/api/orders/recent`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetRecentOrdersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRecentOrders>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRecentOrdersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRecentOrders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRecentOrdersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecentOrders>>> = ({
+    signal,
+  }) => getRecentOrders(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRecentOrders>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRecentOrdersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRecentOrders>>
+>;
+export type GetRecentOrdersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get recent orders (latest first)
+ */
+
+export function useGetRecentOrders<
+  TData = Awaited<ReturnType<typeof getRecentOrders>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRecentOrdersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRecentOrders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRecentOrdersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get order count stats by status
+ */
+export const getGetOrderStatsUrl = () => {
+  return `/api/orders/stats`;
+};
+
+export const getOrderStats = async (
+  options?: RequestInit,
+): Promise<OrderStats> => {
+  return customFetch<OrderStats>(getGetOrderStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOrderStatsQueryKey = () => {
+  return [`/api/orders/stats`] as const;
+};
+
+export const getGetOrderStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOrderStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOrderStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOrderStatsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrderStats>>> = ({
+    signal,
+  }) => getOrderStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getOrderStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetOrderStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getOrderStats>>
+>;
+export type GetOrderStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get order count stats by status
+ */
+
+export function useGetOrderStats<
+  TData = Awaited<ReturnType<typeof getOrderStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOrderStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetOrderStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Cancel a trip by the client
+ */
+export const getCancelTripByClientUrl = (id: number) => {
+  return `/api/trips/${id}/cancel`;
+};
+
+export const cancelTripByClient = async (
+  id: number,
+  tripCancelInput: TripCancelInput,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getCancelTripByClientUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(tripCancelInput),
+  });
+};
+
+export const getCancelTripByClientMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelTripByClient>>,
+    TError,
+    { id: number; data: BodyType<TripCancelInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelTripByClient>>,
+  TError,
+  { id: number; data: BodyType<TripCancelInput> },
+  TContext
+> => {
+  const mutationKey = ["cancelTripByClient"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelTripByClient>>,
+    { id: number; data: BodyType<TripCancelInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return cancelTripByClient(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelTripByClientMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelTripByClient>>
+>;
+export type CancelTripByClientMutationBody = BodyType<TripCancelInput>;
+export type CancelTripByClientMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Cancel a trip by the client
+ */
+export const useCancelTripByClient = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelTripByClient>>,
+    TError,
+    { id: number; data: BodyType<TripCancelInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cancelTripByClient>>,
+  TError,
+  { id: number; data: BodyType<TripCancelInput> },
+  TContext
+> => {
+  return useMutation(getCancelTripByClientMutationOptions(options));
+};
+
+/**
+ * @summary Get current authenticated user (Bearer JWT)
+ */
+export const getGetAuthMeUrl = () => {
+  return `/api/auth/me`;
+};
+
+export const getAuthMe = async (options?: RequestInit): Promise<AuthUser> => {
+  return customFetch<AuthUser>(getGetAuthMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAuthMeQueryKey = () => {
+  return [`/api/auth/me`] as const;
+};
+
+export const getGetAuthMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAuthMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAuthMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthMe>>> = ({
+    signal,
+  }) => getAuthMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAuthMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAuthMeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAuthMe>>
+>;
+export type GetAuthMeQueryError = ErrorType<void>;
+
+/**
+ * @summary Get current authenticated user (Bearer JWT)
+ */
+
+export function useGetAuthMe<
+  TData = Awaited<ReturnType<typeof getAuthMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAuthMeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
