@@ -270,6 +270,12 @@ export interface TopCustomer {
   totalSpent: number;
 }
 
+export interface PlatformStat {
+  platform: string;
+  orderCount: number;
+  revenue: number;
+}
+
 export interface CustomerStats {
   uniqueCustomers: number;
   topCustomers: TopCustomer[];

@@ -126,4 +126,26 @@ router.get("/customer-stats", async (_req, res) => {
   });
 });
 
+router.get("/platform-stats", async (_req, res) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const rows = await db
+    .select({
+      platform: ordersTable.platform,
+      orderCount: sql<number>`count(*)::int`,
+      revenue: sql<number>`coalesce(sum(case when status = 'delivered' then total_amount else 0 end), 0)::float`,
+    })
+    .from(ordersTable)
+    .where(gte(ordersTable.createdAt, today))
+    .groupBy(ordersTable.platform)
+    .orderBy(sql`count(*) desc`);
+
+  res.json(rows.map(r => ({
+    platform: r.platform ?? "Manuel",
+    orderCount: r.orderCount,
+    revenue: r.revenue,
+  })));
+});
+
 export default router;

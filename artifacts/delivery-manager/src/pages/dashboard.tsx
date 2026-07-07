@@ -3,14 +3,14 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useGetDashboardSummary, useListOrders, useListDrivers, useListActivities } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useListOrders, useListDrivers, useListActivities, useGetPlatformStats } from "@workspace/api-client-react";
 import { OrderStatusBadge, DriverStatusBadge } from "@/components/status-badges";
 import { AssignDriverDialog } from "@/components/assign-driver-dialog";
 import { NewOrderDialog } from "@/components/new-order-dialog";
 import { Order } from "@workspace/api-client-react";
 import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 import { cn } from "@/lib/utils";
-import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle, Eye, UserPlus } from "lucide-react";
+import { Activity, Clock, DollarSign, TrendingUp, Users, Bike, MapPin, CheckCircle2, Navigation, Package, X, Circle, WifiOff, AlertTriangle, Eye, UserPlus, LayoutGrid } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
@@ -69,6 +69,10 @@ export default function Dashboard() {
     { limit: 8 },
     { query: { refetchInterval: 5000 } }
   );
+
+  const { data: platformStats } = useGetPlatformStats({
+    query: { refetchInterval: 30000 }
+  });
 
   useNewOrderAlert(pendingOrders?.length);
 
@@ -186,6 +190,39 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Platform breakdown */}
+        {platformStats && platformStats.length > 0 && (
+          <Card className="glass border-white/5 border-t-2 border-t-indigo-500 shadow-[0_-2px_10px_-2px_rgba(99,102,241,0.2)]">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400">
+                    <LayoutGrid className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Commandes par plateforme · aujourd'hui</h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {platformStats.map((stat) => {
+                  const total = platformStats.reduce((s, p) => s + p.orderCount, 0);
+                  const pct = total > 0 ? Math.round((stat.orderCount / total) * 100) : 0;
+                  return (
+                    <div key={stat.platform} className="flex flex-col gap-1.5 bg-black/20 border border-white/5 rounded-xl p-3 hover:border-indigo-500/30 transition-colors">
+                      <div className="text-xs font-medium text-muted-foreground truncate">{stat.platform}</div>
+                      <div className="font-display text-2xl font-bold tracking-tight">{stat.orderCount}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{stat.revenue.toFixed(0)} MAD</div>
+                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-1">
+                        <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="text-[10px] text-indigo-400 font-mono">{pct}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Action Area - Pending Orders */}

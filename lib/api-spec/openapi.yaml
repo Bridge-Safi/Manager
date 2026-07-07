@@ -529,6 +529,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/DriverStats"
 
+  /dashboard/platform-stats:
+    get:
+      operationId: getPlatformStats
+      tags: [dashboard]
+      summary: Orders and revenue breakdown by platform for today
+      responses:
+        "200":
+          description: Per-platform stats for today
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformStat"
+
   /dashboard/customer-stats:
     get:
       operationId: getCustomerStats
@@ -2012,6 +2027,20 @@ components:
       required:
         - uniqueCustomers
         - topCustomers
+
+    PlatformStat:
+      type: object
+      properties:
+        platform:
+          type: string
+        orderCount:
+          type: integer
+        revenue:
+          type: number
+      required:
+        - platform
+        - orderCount
+        - revenue
 
     ResetRequest:
       type: object
