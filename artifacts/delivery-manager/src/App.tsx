@@ -15,6 +15,7 @@ import SafiRunnerPage from "@/pages/safi-runner";
 import ClientsPage from "@/pages/clients";
 import AnnouncementsPage from "@/pages/announcements";
 import GradoSitePage from "@/pages/grado-site";
+import { PasscodeGate } from "@/components/PasscodeGate";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,10 +54,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <RealtimeSync />
-          <Router />
-        </WouterRouter>
+        <PasscodeGate>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <RealtimeSync />
+            <Router />
+          </WouterRouter>
+        </PasscodeGate>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
