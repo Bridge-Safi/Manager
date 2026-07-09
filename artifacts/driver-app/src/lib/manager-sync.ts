@@ -1,8 +1,9 @@
 import { useEffect, useRef, useCallback } from "react";
 
-// L'API Manager est dans le même workspace — appel relatif via le proxy Replit
-const MANAGER_API_URL = "/api/livreur/sync";
-const MANAGER_API_KEY = process.env.VITE_LIVREUR_API_KEY ?? "";
+// URLs et clés configurées via variables d'environnement Vite (Replit Secrets)
+const MANAGER_API_URL = (import.meta.env.VITE_MANAGER_API_URL as string | undefined)
+  ?? "https://manager.safi-bridge.ma/api/livreur/sync";
+const MANAGER_API_KEY = import.meta.env.VITE_MANAGER_API_KEY as string | undefined;
 const SYNC_INTERVAL_MS = 20_000;
 
 export interface ManagerSyncOptions {
@@ -34,6 +35,8 @@ async function syncToManager(payload: {
   currentOrderId?: number;
   currentOrderStatus?: string;
 }): Promise<void> {
+  if (!MANAGER_API_KEY) return; // pas configuré, on skip silencieusement
+
   const body: Record<string, unknown> = {
     driverId: payload.driverId,
     lat: payload.lat,
@@ -43,11 +46,12 @@ async function syncToManager(payload: {
   if (payload.currentOrderId != null) body.currentOrderId = payload.currentOrderId;
   if (payload.currentOrderStatus != null) body.currentOrderStatus = payload.currentOrderStatus;
 
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (MANAGER_API_KEY) headers["x-api-key"] = MANAGER_API_KEY;
   await fetch(MANAGER_API_URL, {
     method: "POST",
-    headers,
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": MANAGER_API_KEY,
+    },
     body: JSON.stringify(body),
   });
 }

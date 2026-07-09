@@ -149,30 +149,7 @@ export default function CommandePage() {
                 : "Les livreurs disponibles reçoivent l'alerte. Réponse dans 5 minutes."}
             </p>
 
-            {/* Confirm code card — livraison only */}
-            {!isTaxi && confirmCode && (
-              <div
-                className="rounded-2xl border mb-5 overflow-hidden"
-                style={{ borderColor: GREEN + "60", background: "#E4F5EC" }}
-              >
-                <div className="px-4 py-2 border-b" style={{ borderColor: GREEN + "30", background: GREEN + "15" }}>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GREEN }}>
-                    🔐 Code de confirmation client
-                  </p>
-                </div>
-                <div className="py-4">
-                  <div
-                    className="text-5xl font-mono font-extrabold tracking-[0.35em] mx-auto"
-                    style={{ color: GREEN }}
-                  >
-                    {confirmCode}
-                  </div>
-                  <p className="text-xs mt-3 px-4" style={{ color: "#2A5C38" }}>
-                    Donnez ce code au livreur à la livraison. Il doit le saisir pour valider.
-                  </p>
-                </div>
-              </div>
-            )}
+        
 
             {/* Status badge for taxi — shows if a driver accepted */}
             {isTaxi && tripStatus && (

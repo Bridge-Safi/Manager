@@ -43,7 +43,7 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; 
 
 const BONUS_THRESHOLD = 400;
 const BONUS_AMOUNT = 100;
-const BASE_PAY = 7;
+const BASE_PAY = 6;
 
 function getLevel(deliveries: number): { name: string; color: string; bg: string; icon: typeof Trophy; next: number } {
   if (deliveries >= BONUS_THRESHOLD) return { name: "Platine", color: "#A78BFA", bg: "rgba(167,139,250,0.2)", icon: Trophy, next: BONUS_THRESHOLD };

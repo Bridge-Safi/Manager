@@ -178,7 +178,7 @@ export default function LivreurLivraisonDetail() {
   const { livreur } = useAuth();
   const LIVREUR_ID = livreur?.id ?? 0;
 
-  const BASE_PAY = 7;
+  const BASE_PAY = 6;
   const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
   const [deliveryConfirmOpen, setDeliveryConfirmOpen] = useState(false);
   const [confirmCodeInput, setConfirmCodeInput] = useState("");
@@ -623,7 +623,7 @@ export default function LivreurLivraisonDetail() {
                   {/* ── Delivery CTA — visible only when in_progress ── */}
                   {delivery.status === "in_progress" && (
                     <button
-                      onClick={() => setDeliveryConfirmOpen(true)}
+                      onClick={() => { setConfirmCodeError(""); setDeliveryConfirmOpen(true); }}
                       disabled={isPending}
                       className="mt-2 w-full h-11 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-sm"
                       style={{ background: GREEN }}
@@ -678,7 +678,7 @@ export default function LivreurLivraisonDetail() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setDeliveryConfirmOpen(true)}
+                  onClick={() => { setConfirmCodeError(""); setDeliveryConfirmOpen(true); }}
                   disabled={isPending}
                   className="w-full h-14 rounded-2xl font-extrabold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
                   style={{ background: GREEN }}
@@ -775,26 +775,13 @@ export default function LivreurLivraisonDetail() {
                 <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivered")}</h3>
                 <p className="text-sm mb-5" style={{ color: BROWN_MID }}>{t("confirm_delivered_btn")}</p>
 
-                {!!delivery.confirmCode && (
-                  <div className="mb-5">
-                    <p className="text-xs font-bold text-left mb-2 uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>
-                      Code de confirmation client
-                    </p>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={confirmCodeInput}
-                      onChange={(e) => setConfirmCodeInput(e.target.value)}
-                      placeholder="· · · · · ·"
-                      className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl text-center text-2xl font-black tracking-[0.5em] text-white focus:border-[#D4880C] focus:ring-0 transition-all"
-                    />
-                    {confirmCodeError && (
-                      <p className="text-xs mt-2 font-bold" style={{ color: TC }}>{confirmCodeError}</p>
-                    )}
-                    <p className="text-[10px] mt-3 italic" style={{ color: BROWN_LIGHT }}>
-                      Demandez ce code au client pour confirmer la livraison
-                    </p>
+                {confirmCodeError && (
+                  <div
+                    className="rounded-xl p-3 mb-4 text-left flex items-start gap-2"
+                    style={{ background: "rgba(220,38,38,0.12)", border: "1px solid rgba(220,38,38,0.4)" }}
+                  >
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#DC2626" }} />
+                    <p className="text-sm font-semibold" style={{ color: "#DC2626" }}>{confirmCodeError}</p>
                   </div>
                 )}
 
@@ -808,7 +795,7 @@ export default function LivreurLivraisonDetail() {
                   </button>
                   <button
                     onClick={handleDelivered}
-                    disabled={isPending || (!!delivery.confirmCode && !confirmCodeInput.trim())}
+                    disabled={isPending}
                     className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
                     style={{ background: GREEN }}
                   >

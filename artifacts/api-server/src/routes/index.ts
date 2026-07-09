@@ -22,6 +22,9 @@ import notificationsRouter from "./notifications";
 import livreurRouter from "./livreur";
 import gradoRouter from "./grado";
 import managerAuthRouter from "./manager-auth";
+import geocodeRouter from "./geocode";
+// Note: assign.ts et dispatch.ts du repo Livreurs utilisent deliveriesTable/deliverersTable
+// qui ne sont pas dans le schéma de ce projet — à migrer séparément
 
 const router: IRouter = Router();
 
@@ -48,5 +51,6 @@ router.use("/notifications", notificationsRouter);
 router.use("/livreur", livreurRouter);
 router.use("/grado", gradoRouter);
 router.use("/manager-auth", managerAuthRouter);
+router.use("/geocode", geocodeRouter);
 
 export default router;
