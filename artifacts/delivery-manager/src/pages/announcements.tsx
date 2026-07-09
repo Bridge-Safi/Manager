@@ -16,6 +16,12 @@ type EmailEntry = { email: string; name: string; source: Source };
 type EmailListResponse = { count: number; emails: EmailEntry[] };
 type SendResult = { sent: number; failed: number; total: number; errors: string[] };
 
+const MANAGER_TOKEN_KEY = "bridge_manager_token";
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem(MANAGER_TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 const AUDIENCES: { id: Audience; label: string; icon: React.ReactNode; color: string; border: string; bg: string; source?: Source }[] = [
   { id: "all",         label: "Tous",         icon: <Globe className="w-4 h-4" />,     color: "text-orange-400",  border: "border-orange-500/40", bg: "bg-orange-500/10" },
   { id: "clients",     label: "Clients",      icon: <Utensils className="w-4 h-4" />,  color: "text-amber-400",   border: "border-amber-500/40",  bg: "bg-amber-500/10",  source: "client" },
@@ -226,13 +232,13 @@ export default function AnnouncementsPage() {
 
   const { data, isLoading, refetch, isRefetching } = useQuery<EmailListResponse>({
     queryKey: ["/api/notifications/emails"],
-    queryFn: () => fetch("/api/notifications/emails").then(r => { if (!r.ok) throw new Error("Erreur"); return r.json(); }),
+    queryFn: () => fetch("/api/notifications/emails", { headers: authHeaders() }).then(r => { if (!r.ok) throw new Error("Erreur"); return r.json(); }),
     staleTime: 60000,
   });
 
   const { data: notifStatus } = useQuery<{ gmailConfigured: boolean; gmailUser: string | null }>({
     queryKey: ["/api/notifications/status"],
-    queryFn: () => fetch("/api/notifications/status").then(r => r.json()),
+    queryFn: () => fetch("/api/notifications/status", { headers: authHeaders() }).then(r => r.json()),
     staleTime: 60000,
   });
   const gmailOk = notifStatus?.gmailConfigured ?? false;
@@ -241,7 +247,7 @@ export default function AnnouncementsPage() {
     mutationFn: () =>
       fetch("/api/notifications/send-announcement", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           subject,
           message: message || undefined,

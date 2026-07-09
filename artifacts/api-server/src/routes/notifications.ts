@@ -1,11 +1,33 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
 import { db, driversTable, clientsTable, restaurantsTable } from "@workspace/db";
 import { isNotNull } from "drizzle-orm";
 
 const router = Router();
 
-type Audience = "all" | "clients" | "drivers" | "restaurants" | "players" | "official";
+const VALID_AUDIENCES = ["all", "clients", "drivers", "restaurants", "players", "official"] as const;
+type Audience = typeof VALID_AUDIENCES[number];
+
+// ─── MANAGER AUTH MIDDLEWARE ─────────────────────────────────────────────────
+
+function requireManagerAuth(req: Request, res: Response, next: NextFunction): void {
+  const JWT_SECRET = process.env.SESSION_SECRET;
+  if (!JWT_SECRET) { res.status(500).json({ error: "Configuration serveur manquante" }); return; }
+
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token) { res.status(401).json({ error: "Token manager requis" }); return; }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { type?: string };
+    if (payload.type !== "manager") { res.status(403).json({ error: "Accès refusé" }); return; }
+    next();
+  } catch {
+    res.status(401).json({ error: "Token invalide ou expiré" });
+  }
+}
 
 function createTransport() {
   const user = process.env.GMAIL_USER;
@@ -292,13 +314,13 @@ function buildHtml(audience: Audience, subject: string, message: string): string
 
 // ─── ROUTES ────────────────────────────────────────────────────────────────
 
-router.get("/status", (_req, res) => {
+router.get("/status", requireManagerAuth, (_req, res) => {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
   res.json({ gmailConfigured: !!(user && pass), gmailUser: user ?? null });
 });
 
-router.get("/emails", async (_req, res) => {
+router.get("/emails", requireManagerAuth, async (_req, res) => {
   const [drivers, clients, restaurants] = await Promise.all([
     db.select({ email: driversTable.email, name: driversTable.name })
       .from(driversTable).where(isNotNull(driversTable.email)),
@@ -342,7 +364,7 @@ router.get("/emails", async (_req, res) => {
   res.json({ count: unique.length, emails: unique });
 });
 
-router.post("/send-announcement", async (req, res) => {
+router.post("/send-announcement", requireManagerAuth, async (req, res) => {
   const transport = createTransport();
   if (!transport) {
     res.status(503).json({ error: "Gmail non configuré. Ajoutez GMAIL_USER et GMAIL_APP_PASSWORD." });
@@ -350,19 +372,34 @@ router.post("/send-announcement", async (req, res) => {
   }
 
   const { to, subject, message, audience } = req.body as {
-    to?: string[];
-    subject?: string;
-    message?: string;
-    audience?: Audience;
+    to?: unknown;
+    subject?: unknown;
+    message?: unknown;
+    audience?: unknown;
   };
 
-  const emailSubject = subject ?? "🚀 Annonce Bridge Safi";
-  const emailMessage = message ?? "Nous avons une annonce importante à vous partager concernant Bridge Safi, votre plateforme locale à Safi.";
-  const emailAudience: Audience = audience ?? "official";
+  // Validate inputs
+  const emailAudience: Audience = VALID_AUDIENCES.includes(audience as Audience)
+    ? (audience as Audience)
+    : "official";
+
+  const emailSubject = typeof subject === "string" && subject.trim().length > 0
+    ? subject.trim().slice(0, 200)
+    : "🚀 Annonce Bridge Safi";
+
+  const emailMessage = typeof message === "string" && message.trim().length > 0
+    ? message.trim().slice(0, 5000)
+    : "Nous avons une annonce importante à vous partager concernant Bridge Safi, votre plateforme locale à Safi.";
+
+  // Validate explicit recipient list if provided
+  const explicitTo: string[] | null = Array.isArray(to)
+    ? to.filter((e): e is string => typeof e === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+    : null;
 
   const html = buildHtml(emailAudience, emailSubject, emailMessage);
 
-  let recipients: string[] = to ?? [];
+  // Use validated explicit list if provided, otherwise resolve by audience from DB
+  let recipients: string[] = explicitTo ?? [];
 
   if (recipients.length === 0) {
     const [drivers, clients, restaurants] = await Promise.all([
