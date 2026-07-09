@@ -4,8 +4,8 @@ import * as schema from "./schema";
 
 const { Pool } = pg;
 
-// Prefer RAILWAY_DATABASE_URL (external Railway DB) over the local Replit DB
-let connectionString = process.env.RAILWAY_DATABASE_URL ?? process.env.DATABASE_URL;
+// Prefer external Railway DB over the local Replit DB
+let connectionString = process.env.DATABASE_PUBLIC_URL ?? process.env.RAILWAY_DATABASE_URL ?? process.env.DATABASE_URL;
 
 if (!connectionString) {
   throw new Error(
