@@ -1,3 +1,6 @@
 - [Auth architecture](auth-arch.md) — JWT for restaurants via SESSION_SECRET; setAuthTokenGetter wires client; SSE can't Bearer (EventSource limitation)
 - [Status mapping](status-mapping.md) — Bridge Manager statuses: pending→assigned→in_delivery→delivered; restaurateurs-codebase used accepted/ready (now aligned)
 - [SSE event names](sse-events.md) — new_order = restaurant SSE; order:created = internal; both emitted on webhook; EventSource routes must stay unauthenticated
+- [Manager access code](manager-code.md) — default 9-digit code is 159753852; overridable via MANAGER_ACCESS_CODE env var (manager-auth.ts)
+- [DB schema setup](db-setup.md) — Drizzle migration run via `pnpm --filter db push`; tables: orders, drivers, restaurants, activities, clients, players, reviews, reset_requests, grado_subscriptions, site_stats, visit_logs
+- [Repo origins](repo-origins.md) — Jeux repo = safi-runner (identical); Livreurs repo = driver-app updates + assign/dispatch routes (incompatible schema, deferred); Bridge-Safi = separate orders/SSE stack
