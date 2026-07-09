@@ -2394,7 +2394,7 @@ function CheckoutDrawer({cart,lang,onClose,onQty,profile,onClearCart,restaurantN
   const [cardExp,setCardExp]=useState(profile.cardExpiry);
   const [cardCVV,setCardCVV]=useState('');
   const [cardName,setCardName]=useState(profile.cardName);
-  const [orderRef]=useState(`BE-${Math.floor(1000+Math.random()*9000)}`);
+  const [orderRef]=useState(()=>`BE-${Date.now().toString(36).toUpperCase().slice(-5)}-${Math.random().toString(36).slice(2,5).toUpperCase()}`);
   const [collectCode]=useState(`CC-${Math.floor(1000+Math.random()*9000)}`);
   const [cardErr,setCardErr]=useState('');
 
@@ -2417,9 +2417,8 @@ function CheckoutDrawer({cart,lang,onClose,onQty,profile,onClearCart,restaurantN
       if(!canMake) throw new Error('unavailable');
       const response=await pr.show();
       await response.complete('success');
-      sendOrderToAPI(payLabel);
-      sendOrderToDriverApp(payLabel);
-      handleSuccess();
+      const ok=await sendOrderToAPI(payLabel);
+      if(ok){sendOrderToDriverApp(payLabel);handleSuccess();}
     }catch(e:unknown){
       const msg=e instanceof Error?e.message:'';
       if(msg!=='AbortError'&&msg!==''){
@@ -2432,26 +2431,25 @@ function CheckoutDrawer({cart,lang,onClose,onQty,profile,onClearCart,restaurantN
 
   const autoFilled=!!(profile.name||profile.address||profile.phone);
 
-  const sendOrderToAPI=async(paymentMethod:string)=>{
+  const sendOrderToAPI=async(paymentMethod:string):Promise<boolean>=>{
     try{
       const items=cart.map(i=>({name:i.item.names['fr'],qty:i.qty,price:i.totalPerUnit,options:Object.entries(i.selectedOptions).flatMap(([,ids])=>ids)}));
-      await fetch('/api/orders',{
+      const res=await fetch('/api/orders',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          ref:orderRef,
-          service:'delivery',
+          orderNumber:orderRef,
           customerName:name.trim(),
           customerPhone:phone.trim(),
-          customerAddress:delivMode==='collect'?`Click & Collect — ${addr.trim()||'Plateau, Safi'}`:addr.trim(),
-          items,
-          total:Math.round(total*100)/100,
-          deliveryMode:delivMode,
-          paymentMethod,
-          restaurantName:restaurantName||null,
-          collectCode:delivMode==='collect'?collectCode:null,
+          deliveryAddress:delivMode==='collect'?`Click & Collect — ${addr.trim()||'Plateau, Safi'}`:addr.trim(),
+          items:JSON.stringify(items),
+          totalAmount:Math.round(total*100)/100,
+          serviceType:'nourriture',
+          platform:'Bridge Eats',
+          notes:delivMode==='collect'?`Click & Collect — CODE: ${collectCode}`:(restaurantName?`Restaurant: ${restaurantName}`:undefined),
         }),
       });
+      if(!res.ok){console.error('[Bridge→Manager] order POST failed',res.status,await res.text().catch(()=>''));return false;}
       // Deduct diamonds server-side if used
       if(ptsUsed>0){
         const diamondsToSpend=ptsUsed*200; // 200 💎 = 1 MAD (1 000 💎 = 5 MAD)
@@ -2467,7 +2465,8 @@ function CheckoutDrawer({cart,lang,onClose,onQty,profile,onClearCart,restaurantN
           }
         }).catch(()=>{}));
       }
-    }catch(_){/* silent */}
+      return true;
+    }catch(e){console.error('[Bridge→Manager] sendOrderToAPI error',e);return false;}
   };
 
   // Envoie la commande directement au site livreur Bridge Logistique
@@ -2823,8 +2822,8 @@ function CheckoutDrawer({cart,lang,onClose,onQty,profile,onClearCart,restaurantN
               <button
                 onClick={()=>{
                   if(!payMethod)return;
-                  if(payMethod==='cash'){sendOrderToAPI('cash');sendOrderToDriverApp('cash');handleSuccess();}
-                  else if(payMethod==='qr'){sendOrderToAPI('QR Code');setShowQRModal(true);}
+                  if(payMethod==='cash'){(async()=>{const ok=await sendOrderToAPI('cash');if(ok){sendOrderToDriverApp('cash');handleSuccess();}})();}
+                  else if(payMethod==='qr'){(async()=>{const ok=await sendOrderToAPI('QR Code');if(ok)setShowQRModal(true);})();}
                   else{setStep('card');}
                 }}
                 disabled={!payMethod}
@@ -2898,9 +2897,7 @@ function CheckoutDrawer({cart,lang,onClose,onQty,profile,onClearCart,restaurantN
                 if(!isRealCard(cardNum)){setCardErr(t.errLuhn);return;}
                 if(!cardCVV||cardCVV.length<3){setCardErr(t.fillAll);return;}
                 setCardErr('');
-                sendOrderToAPI('card');
-                sendOrderToDriverApp('card');
-                handleSuccess();
+                (async()=>{const ok=await sendOrderToAPI('card');if(ok){sendOrderToDriverApp('card');handleSuccess();}})();
               }}
                 className={`w-full py-4 rounded-2xl font-black text-sm text-white transition-all active:scale-95 ${fClass}`}
                 style={{background:'#4F46E5',boxShadow:'0 6px 20px rgba(79,70,229,0.35)'}}>
