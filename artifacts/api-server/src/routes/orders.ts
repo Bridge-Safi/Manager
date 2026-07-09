@@ -104,6 +104,64 @@ router.post("/", async (req, res) => {
   });
 });
 
+// GET /orders/recent — dernières commandes (doit être avant /:id)
+router.get("/recent", async (req, res) => {
+  const limit = Math.min(Number(req.query.limit ?? 20), 100);
+  const orders = await db
+    .select()
+    .from(ordersTable)
+    .orderBy(desc(ordersTable.createdAt))
+    .limit(limit);
+
+  const driverIds = [...new Set(orders.map(o => o.driverId).filter(Boolean))] as number[];
+  const drivers = driverIds.length
+    ? await db.select().from(driversTable).where(inArray(driversTable.id, driverIds))
+    : [];
+  const driverMap = Object.fromEntries(drivers.map(d => [d.id, d.name]));
+
+  res.json(orders.map(o => ({
+    ...o,
+    driverName: o.driverId ? (driverMap[o.driverId] ?? null) : null,
+    createdAt: o.createdAt.toISOString(),
+    updatedAt: o.updatedAt.toISOString(),
+  })));
+});
+
+// GET /orders/stats — compteurs par statut (doit être avant /:id)
+router.get("/stats", async (_req, res) => {
+  const orders = await db.select({ status: ordersTable.status }).from(ordersTable);
+  const stats: Record<string, number> = { pending: 0, assigned: 0, in_delivery: 0, delivered: 0, cancelled: 0, total: 0 };
+  for (const o of orders) {
+    stats.total++;
+    if (o.status in stats) stats[o.status]++;
+  }
+  res.json(stats);
+});
+
+// GET /orders/events — flux SSE temps réel (doit être avant /:id)
+// Note: EventSource API ne supporte pas les headers Authorization. Endpoint read-only.
+router.get("/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  const clientId = `orders-sse-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  try { res.write(`event: connected\ndata: ${JSON.stringify({ clientId })}\n\n`); } catch {}
+
+  addSSEClient(clientId, res, "orders");
+
+  const heartbeat = setInterval(() => {
+    try { res.write(`event: ping\ndata: ${JSON.stringify({ ts: Date.now() })}\n\n`); } catch {}
+  }, 20000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    removeSSEClient(clientId);
+  });
+});
+
 router.get("/:id", async (req, res) => {
   const parsed = GetOrderParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) {
@@ -275,40 +333,6 @@ router.patch("/:id", async (req, res) => {
   });
 });
 
-// GET /orders/recent — dernières commandes
-router.get("/recent", async (req, res) => {
-  const limit = Math.min(Number(req.query.limit ?? 20), 100);
-  const orders = await db
-    .select()
-    .from(ordersTable)
-    .orderBy(desc(ordersTable.createdAt))
-    .limit(limit);
-
-  const driverIds = [...new Set(orders.map(o => o.driverId).filter(Boolean))] as number[];
-  const drivers = driverIds.length
-    ? await db.select().from(driversTable).where(inArray(driversTable.id, driverIds))
-    : [];
-  const driverMap = Object.fromEntries(drivers.map(d => [d.id, d.name]));
-
-  res.json(orders.map(o => ({
-    ...o,
-    driverName: o.driverId ? (driverMap[o.driverId] ?? null) : null,
-    createdAt: o.createdAt.toISOString(),
-    updatedAt: o.updatedAt.toISOString(),
-  })));
-});
-
-// GET /orders/stats — compteurs par statut
-router.get("/stats", async (_req, res) => {
-  const orders = await db.select({ status: ordersTable.status }).from(ordersTable);
-  const stats: Record<string, number> = { pending: 0, assigned: 0, in_delivery: 0, delivered: 0, cancelled: 0, total: 0 };
-  for (const o of orders) {
-    stats.total++;
-    if (o.status in stats) stats[o.status]++;
-  }
-  res.json(stats);
-});
-
 // POST /orders/:id/accept — le restaurant accepte une commande (JWT requis)
 router.post("/:id/accept", requireRestaurantAuth, async (req, res) => {
   const id = Number(req.params.id);
@@ -355,30 +379,6 @@ router.post("/:id/reject", requireRestaurantAuth, async (req, res) => {
     driverName: null,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
-  });
-});
-
-// GET /orders/events — flux SSE temps réel (pour le tableau de bord restaurant)
-// Note: EventSource API ne supporte pas les headers Authorization. Endpoint read-only.
-router.get("/events", (req, res) => {
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
-  res.flushHeaders();
-
-  const clientId = `orders-sse-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  try { res.write(`event: connected\ndata: ${JSON.stringify({ clientId })}\n\n`); } catch {}
-
-  addSSEClient(clientId, res, "orders");
-
-  const heartbeat = setInterval(() => {
-    try { res.write(`event: ping\ndata: ${JSON.stringify({ ts: Date.now() })}\n\n`); } catch {}
-  }, 20000);
-
-  req.on("close", () => {
-    clearInterval(heartbeat);
-    removeSSEClient(clientId);
   });
 });
 
