@@ -76,3 +76,4 @@ externalPort = 4200
 [userenv.shared]
 LIVREUR_API_KEY = "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32"
 GMAIL_USER = "bridge.safi@gmail.com"
+RAILWAY_PUBLIC_HOST = "thomas.proxy.rlwy.net:49176"
