@@ -114,4 +114,4 @@ externalPort = 4200
 LIVREUR_API_KEY = "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32"
 GMAIL_USER = "bridge.safi@gmail.com"
 RAILWAY_PUBLIC_HOST = "thomas.proxy.rlwy.net:49176"
-DATABASE_PUBLIC_URL = "postgresql://postgres:mIdNsEbxtMNhizPGpNARJiqGvPjUmiLp@postgres.railway.internal:5432/railway"
+DATABASE_PUBLIC_URL = "postgresql://postgres:mIdNsEbxtMNhizPGpNARJiqGvPjUmiLp@thomas.proxy.rlwy.net:49176/railway"
