@@ -4,6 +4,72 @@ settings:
   autoInstallPeers: false
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@replit/vite-plugin-cartographer':
+      specifier: ^0.5.1
+      version: 0.5.1
+    '@replit/vite-plugin-dev-banner':
+      specifier: ^0.1.1
+      version: 0.1.2
+    '@replit/vite-plugin-runtime-error-modal':
+      specifier: ^0.0.6
+      version: 0.0.6
+    '@tailwindcss/vite':
+      specifier: ^4.1.14
+      version: 4.2.1
+    '@tanstack/react-query':
+      specifier: ^5.90.21
+      version: 5.90.21
+    '@types/node':
+      specifier: ^25.3.3
+      version: 25.3.5
+    '@types/react':
+      specifier: ^19.2.0
+      version: 19.2.14
+    '@types/react-dom':
+      specifier: ^19.2.0
+      version: 19.2.3
+    '@vitejs/plugin-react':
+      specifier: ^5.0.4
+      version: 5.1.4
+    class-variance-authority:
+      specifier: ^0.7.1
+      version: 0.7.1
+    clsx:
+      specifier: ^2.1.1
+      version: 2.1.1
+    drizzle-orm:
+      specifier: ^0.45.2
+      version: 0.45.2
+    framer-motion:
+      specifier: ^12.23.24
+      version: 12.35.1
+    lucide-react:
+      specifier: ^0.545.0
+      version: 0.545.0
+    react:
+      specifier: 19.1.0
+      version: 19.1.0
+    react-dom:
+      specifier: 19.1.0
+      version: 19.1.0
+    tailwind-merge:
+      specifier: ^3.3.1
+      version: 3.5.0
+    tailwindcss:
+      specifier: ^4.1.14
+      version: 4.2.1
+    tsx:
+      specifier: ^4.21.0
+      version: 4.21.0
+    vite:
+      specifier: ^7.3.2
+      version: 7.3.2
+    zod:
+      specifier: ^3.25.76
+      version: 3.25.76
+
 overrides:
   lodash: '>=4.18.0'
   path-to-regexp: '>=8.4.0'
@@ -101,12 +167,6 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
 
-  .local/share/pnpm/.tools/pnpm/9.0.0_tmp_1398:
-    dependencies:
-      pnpm:
-        specifier: 9.0.0
-        version: 9.0.0
-
   artifacts/api-server:
     dependencies:
       '@workspace/api-zod':
@@ -136,6 +196,9 @@ importers:
       nodemailer:
         specifier: ^8.0.10
         version: 8.0.10
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
       pino:
         specifier: ^9
         version: 9.14.0
@@ -3527,11 +3590,6 @@ packages:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
     engines: {node: '>=10.13.0'}
 
-  pnpm@9.0.0:
-    resolution: {integrity: sha512-tBBnB8ciWxdIthWVlTzL6/+XtUrQXQAqo2NfYzucU81mb3zpuLxEcE8foEi5pJtVNxqy2enWZ9Hv4u8VFLzVEw==}
-    engines: {node: '>=18.12'}
-    hasBin: true
-
   postcss-selector-parser@6.0.10:
     resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
     engines: {node: '>=4'}
@@ -6609,8 +6667,6 @@ snapshots:
       thread-stream: 3.1.0
 
   pngjs@5.0.0: {}
-
-  pnpm@9.0.0: {}
 
   postcss-selector-parser@6.0.10:
     dependencies:
