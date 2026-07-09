@@ -8,3 +8,4 @@ export * from "./players";
 export * from "./clients";
 export * from "./site-stats";
 export * from "./grado-subscriptions";
+export * from "./push-subscriptions";

@@ -15,7 +15,9 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    const swUrl = BASE ? `${BASE}/sw.js` : "/sw.js";
+    const scope = BASE ? `${BASE}/` : "/";
+    const reg = await navigator.serviceWorker.register(swUrl, { scope });
     return reg;
   } catch {
     return null;
