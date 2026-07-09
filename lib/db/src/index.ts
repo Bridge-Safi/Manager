@@ -13,7 +13,8 @@ if (!connectionString) {
   );
 }
 
-export const pool = new Pool({ connectionString, ssl: process.env.RAILWAY_DATABASE_URL ? { rejectUnauthorized: false } : undefined });
+// Railway public TCP proxy does not support SSL — disable it when using RAILWAY_DATABASE_URL
+export const pool = new Pool({ connectionString, ssl: false });
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";
