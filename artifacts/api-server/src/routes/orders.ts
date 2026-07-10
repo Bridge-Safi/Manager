@@ -471,4 +471,35 @@ router.post("/webhook", async (req, res) => {
   });
 });
 
+// POST /orders/by-number/:orderNumber/report — reçoit un signalement client
+// (bouton "Signaler un problème" côté Bridge-safi, appelé server-to-server
+// juste après que le client note sa commande). N'écrit dans aucune nouvelle
+// table : on réutilise le flux d'activité déjà affiché dans Surveillance.
+router.post("/by-number/:orderNumber/report", async (req, res): Promise<void> => {
+  const { orderNumber } = req.params;
+  const { reason } = req.body ?? {};
+
+  const trimmedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
+  if (!trimmedReason) {
+    res.status(400).json({ error: "reason requis" });
+    return;
+  }
+
+  const rows = await db.select().from(ordersTable).where(eq(ordersTable.orderNumber, orderNumber)).limit(1);
+  const order = rows[0];
+  if (!order) {
+    res.json({ ok: true, skipped: true });
+    return;
+  }
+
+  await logActivity({
+    driverId: order.driverId,
+    orderId: order.id,
+    action: "customer_report",
+    details: `Signalement client sur ${order.orderNumber} : ${trimmedReason}`,
+  });
+
+  res.json({ ok: true });
+});
+
 export default router;
