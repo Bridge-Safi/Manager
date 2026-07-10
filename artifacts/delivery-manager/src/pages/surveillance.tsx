@@ -48,6 +48,7 @@ function getActivityIcon(action: string) {
     case "status_available": return <Circle className="w-4 h-4 text-green-500" />;
     case "status_offline": return <WifiOff className="w-4 h-4 text-zinc-500" />;
     case "location_updated": return <Navigation className="w-4 h-4 text-primary" />;
+    case "customer_report": return <AlertTriangle className="w-4 h-4 text-red-500" />;
     default: return <ActivityIcon className="w-4 h-4 text-muted-foreground" />;
   }
 }
