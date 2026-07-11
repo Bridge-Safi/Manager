@@ -58,7 +58,7 @@ export function AssignDriverDialog({ order, onClose }: AssignDriverDialogProps) 
   };
 
   // Types de service livreur (livraison à pied/moto)
-  const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "pharmacie"];
+  const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "fleurs", "pharmacie", "souk", "boulangerie", "supermarche"];
   // Types de service chauffeur (taxi / VTC)
   const TAXI_SERVICE_TYPES = ["taxi", "confort"];
 
