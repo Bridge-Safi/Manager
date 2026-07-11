@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, Store, Gamepad2, UserCircle, Send, Globe } from "lucide-react";
+import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, Store, Gamepad2, UserCircle, Send, Globe, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./notification-bell";
 import { useQuery } from "@tanstack/react-query";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -50,12 +52,44 @@ function GradoPendingButton() {
   );
 }
 
+function NavLinks({ location, onNavigate }: { location: string; onNavigate?: () => void }) {
+  return (
+    <>
+      {NAV_ITEMS.map((item) => {
+        const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+        return (
+          <Link key={item.href} href={item.href} className="block" onClick={onNavigate}>
+            <div
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-full transition-all duration-300 relative group overflow-hidden",
+                isActive
+                  ? "text-primary-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              )}
+            >
+              {isActive && (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-amber-500 opacity-90 z-0"></div>
+                  <div className="absolute inset-0 shadow-[0_0_20px_rgba(255,90,31,0.4)] z-0"></div>
+                </>
+              )}
+              <item.icon className={cn("w-5 h-5 relative z-10 transition-transform group-hover:scale-110", isActive ? "text-primary-foreground" : "")} />
+              <span className="relative z-10 text-sm">{item.label}</span>
+            </div>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden selection:bg-primary/30">
-      {/* Sidebar */}
+      {/* Sidebar (desktop) */}
       <aside className="w-[260px] border-r border-white/5 bg-gradient-to-b from-sidebar to-background flex-col hidden md:flex shrink-0 z-20 shadow-2xl relative">
         <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-primary/0 via-primary/20 to-primary/0"></div>
         
@@ -72,30 +106,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-            return (
-              <Link key={item.href} href={item.href} className="block">
-                <div
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-full transition-all duration-300 relative group overflow-hidden",
-                    isActive
-                      ? "text-primary-foreground font-medium"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                  )}
-                >
-                  {isActive && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary to-amber-500 opacity-90 z-0"></div>
-                      <div className="absolute inset-0 shadow-[0_0_20px_rgba(255,90,31,0.4)] z-0"></div>
-                    </>
-                  )}
-                  <item.icon className={cn("w-5 h-5 relative z-10 transition-transform group-hover:scale-110", isActive ? "text-primary-foreground" : "")} />
-                  <span className="relative z-10 text-sm">{item.label}</span>
-                </div>
-              </Link>
-            );
-          })}
+          <NavLinks location={location} />
         </nav>
 
         <div className="p-4 mt-auto">
@@ -109,10 +120,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
+      {/* Mobile nav drawer */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="w-[280px] bg-gradient-to-b from-sidebar to-background border-white/5 flex flex-col p-0">
+          <SheetHeader className="p-4 flex-row items-center gap-2.5 space-y-0 text-left">
+            <div className="w-10 h-10 shrink-0 rounded-xl overflow-hidden border border-white/10 shadow-lg bg-black/40">
+              <img src="/bridge-logo.jpg" alt="Bridge Logo" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex flex-col justify-center flex-1 min-w-0">
+              <SheetTitle className="font-display font-bold text-lg leading-none tracking-tight truncate">Bridge Manager</SheetTitle>
+            </div>
+          </SheetHeader>
+          <nav className="flex-1 px-4 pb-6 space-y-2 overflow-y-auto">
+            <NavLinks location={location} onNavigate={() => setMobileNavOpen(false)} />
+          </nav>
+        </SheetContent>
+      </Sheet>
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 bg-background relative z-10">
-        <header className="h-16 border-b border-white/5 bg-background/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 md:hidden z-20">
+        <header className="h-16 border-b border-white/5 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 shrink-0 md:hidden z-20">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Ouvrir le menu"
+              className="w-9 h-9 -ml-1.5 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <div className="w-8 h-8 relative">
                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
                 <path d="M50 5 L88.97 27.5 L88.97 72.5 L50 95 L11.03 72.5 L11.03 27.5 Z" fill="#FF5A1F" fillOpacity="0.2" stroke="#FF5A1F" strokeWidth="4"/>
