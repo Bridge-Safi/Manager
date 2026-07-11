@@ -305,18 +305,45 @@ router.post("/order", async (req, res) => {
 });
 
 // POST /livreur/sync — synchronisation complète (location + status + commande en cours)
+//
+// IMPORTANT: le driverId envoyé ici vient de la base du repo Livreurs (l'app
+// chauffeur), qui est une base Postgres SEPAREE de celle de Manager. Les deux
+// bases ont chacune leur propre numerotation auto-incrementee : l'id d'un
+// livreur cote Livreurs n'a AUCUNE raison de correspondre a l'id de sa ligne
+// dans la table drivers de Manager. Pareil pour currentOrderId (id interne
+// Livreurs) compare a l'id d'une commande dans la table orders de Manager.
+// Utiliser ces id bruts pour un UPDATE ... WHERE id = X ne matchait donc
+// quasiment jamais la bonne ligne -> la position GPS et l'assignation de
+// commande n'apparaissaient jamais correctement sur le tableau de bord.
+//
+// Le telephone du livreur et le numero de suivi (trackingNumber / ref) sont
+// en revanche les MEMES partout (Bridge-safi, Livreurs, Manager) : on les
+// utilise comme cle de correspondance fiable, avec repli sur l'ancien
+// comportement par id pour ne rien casser si une vieille version de l'app
+// livreur n'envoie pas encore ces champs.
 router.post("/sync", async (req, res) => {
-  const { driverId, lat, lng, status, currentOrderId, currentOrderStatus } = req.body as {
+  const {
+    driverId,
+    phone,
+    lat,
+    lng,
+    status,
+    currentOrderId,
+    currentOrderStatus,
+    currentOrderTrackingNumber,
+  } = req.body as {
     driverId?: number;
+    phone?: string;
     lat?: number;
     lng?: number;
     status?: string;
     currentOrderId?: number;
     currentOrderStatus?: string;
+    currentOrderTrackingNumber?: string;
   };
 
-  if (!driverId) {
-    res.status(400).json({ error: "driverId requis" });
+  if (!driverId && !phone) {
+    res.status(400).json({ error: "driverId ou phone requis" });
     return;
   }
 
@@ -327,32 +354,65 @@ router.post("/sync", async (req, res) => {
   }
   if (status) updates.status = status;
 
-  const [driver] = await db
-    .update(driversTable)
-    .set(updates)
-    .where(eq(driversTable.id, driverId))
-    .returning();
+  let driver: typeof driversTable.$inferSelect | undefined;
+
+  if (phone) {
+    [driver] = await db.update(driversTable).set(updates).where(eq(driversTable.phone, phone)).returning();
+  }
+  if (!driver && driverId) {
+    [driver] = await db.update(driversTable).set(updates).where(eq(driversTable.id, driverId)).returning();
+  }
 
   if (!driver) {
-    res.status(404).json({ error: "Livreur introuvable" });
+    await logActivity({
+      action: "sync_driver_not_found",
+      details: `Sync livreur: aucune ligne trouvee (phone=${phone ?? "?"}, driverId Livreurs=${driverId ?? "?"})`,
+    });
+    res.status(404).json({ error: "Livreur introuvable (ni par téléphone, ni par id)" });
     return;
   }
 
-  if (currentOrderId && currentOrderStatus) {
+  if (currentOrderStatus) {
     const validStatuses = ["assigned", "picked_up", "delivering", "delivered", "cancelled"];
     if (validStatuses.includes(currentOrderStatus)) {
-      await db
-        .update(ordersTable)
-        .set({ status: currentOrderStatus, updatedAt: new Date() })
-        .where(and(
-          eq(ordersTable.id, currentOrderId),
-          eq(ordersTable.driverId, driverId),
-        ));
+      let orderUpdated: (typeof ordersTable.$inferSelect)[] = [];
+
+      if (currentOrderTrackingNumber) {
+        orderUpdated = await db
+          .update(ordersTable)
+          .set({ status: currentOrderStatus, driverId: driver.id, updatedAt: new Date() })
+          .where(eq(ordersTable.orderNumber, currentOrderTrackingNumber))
+          .returning();
+      } else if (currentOrderId) {
+        orderUpdated = await db
+          .update(ordersTable)
+          .set({ status: currentOrderStatus, driverId: driver.id, updatedAt: new Date() })
+          .where(and(
+            eq(ordersTable.id, currentOrderId),
+            eq(ordersTable.driverId, driver.id),
+          ))
+          .returning();
+      }
+
+      if (orderUpdated.length === 0) {
+        await logActivity({
+          driverId: driver.id,
+          action: "sync_order_not_found",
+          details: `Sync livreur: commande introuvable (ref=${currentOrderTrackingNumber ?? "?"}, id Livreurs=${currentOrderId ?? "?"})`,
+        });
+      } else {
+        emitEvent("order:updated", {
+          id: orderUpdated[0].id,
+          orderNumber: orderUpdated[0].orderNumber,
+          status: currentOrderStatus,
+          driverId: driver.id,
+        });
+      }
     }
   }
 
   if (lat !== undefined && lng !== undefined) {
-    emitEvent("driver:location", { driverId, lat, lng });
+    emitEvent("driver:location", { driverId: driver.id, lat, lng });
   }
 
   const activeOrders = await db
@@ -360,7 +420,7 @@ router.post("/sync", async (req, res) => {
     .from(ordersTable)
     .where(
       and(
-        eq(ordersTable.driverId, driverId),
+        eq(ordersTable.driverId, driver.id),
         or(
           eq(ordersTable.status, "assigned"),
           eq(ordersTable.status, "picked_up"),
