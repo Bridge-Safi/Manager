@@ -22,12 +22,16 @@ import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 import { cn } from "@/lib/utils";
 
 const SERVICE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-  nourriture: { label: "Nourriture", emoji: "🍔", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-  taxi:       { label: "Taxi",       emoji: "🚖", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-  confort:    { label: "Confort",    emoji: "🚘", color: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
-  tabac:      { label: "Tabac",      emoji: "🚬", color: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30" },
-  fleur:      { label: "Fleurs",     emoji: "🌸", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
-  pharmacie:  { label: "Pharmacie",  emoji: "💊", color: "bg-green-500/20 text-green-300 border-green-500/30" },
+  nourriture:  { label: "Nourriture",   emoji: "🍔", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+  taxi:        { label: "Taxi",         emoji: "🚖", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+  confort:     { label: "Confort",      emoji: "🚘", color: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
+  tabac:       { label: "Tabac",        emoji: "🚬", color: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30" },
+  fleur:       { label: "Fleurs",       emoji: "🌸", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+  fleurs:      { label: "Fleurs",       emoji: "🌸", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+  pharmacie:   { label: "Pharmacie",    emoji: "💊", color: "bg-green-500/20 text-green-300 border-green-500/30" },
+  souk:        { label: "Souk",         emoji: "🛍️", color: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
+  boulangerie: { label: "Boulangerie",  emoji: "🥐", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+  supermarche: { label: "Supermarché",  emoji: "🛒", color: "bg-red-500/20 text-red-300 border-red-500/30" },
 };
 
 // Platform badge colours — deterministic by name prefix
