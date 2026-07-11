@@ -4,7 +4,7 @@ import { eq, and, desc, sql, gte, notInArray } from "drizzle-orm";
 import { emitEvent } from "../lib/event-bus";
 
 // Ces types de service sont des livraisons à pied/moto — les livreurs les reçoivent
-const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "pharmacie"] as const;
+const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "fleurs", "pharmacie", "souk", "boulangerie", "supermarche"] as const;
 // Ces types sont réservés aux chauffeurs (taxi/VTC) — jamais envoyés aux livreurs
 const TAXI_SERVICE_TYPES = ["taxi", "confort"];
 
