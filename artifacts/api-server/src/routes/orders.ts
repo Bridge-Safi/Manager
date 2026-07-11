@@ -419,7 +419,7 @@ router.post("/webhook", async (req, res) => {
 
   const finalOrderNumber = orderNumber ?? generateOrderNumber();
 
-  const validServiceTypes = ["nourriture", "taxi", "confort", "tabac", "fleur", "pharmacie"];
+  const validServiceTypes = ["nourriture", "taxi", "confort", "tabac", "fleur", "fleurs", "pharmacie", "souk", "boulangerie", "supermarche"];
   const resolvedServiceType = serviceType && validServiceTypes.includes(serviceType) ? serviceType : "nourriture";
 
   const [order] = await db
