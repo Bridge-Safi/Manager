@@ -61,7 +61,9 @@ export default function Dashboard() {
     todayDelivered: number; deliveredOrders: number;
     driverPayToday: number; driverPayTotal: number;
     netToday: number; netTotal: number;
+    restaurantPayToday: number; restaurantPayTotal: number;
     driverPayPerDelivery: number;
+    bridgeFeePerDelivery: number;
   };
   const rev = summary as unknown as RevenueExtras | undefined;
 
@@ -96,16 +98,24 @@ export default function Dashboard() {
   const { chartData, platforms } = useMemo(() => {
     if (!platformHistory || platformHistory.length === 0) return { chartData: [], platforms: [] };
 
-    // Collect all distinct platforms
-    const platformSet = new Set<string>();
-    platformHistory.forEach(r => platformSet.add(r.platform));
-    const platforms = Array.from(platformSet).sort();
+    // Classement des plateformes par volume total sur 7 jours : on garde les
+    // 5 plus grosses, le reste est regroupé dans "Autres" — sinon le graphe
+    // devient illisible dès qu'il y a beaucoup de restos/plateformes.
+    const totals = new Map<string, number>();
+    platformHistory.forEach(r => totals.set(r.platform, (totals.get(r.platform) ?? 0) + r.orderCount));
+    const ranked = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]).map(([name]) => name);
+    const top = ranked.slice(0, 5);
+    const hasOthers = ranked.length > 5;
+    const platforms = hasOthers ? [...top, "Autres"] : top;
+    const toKey = (name: string) => (top.includes(name) ? name : "Autres");
 
     // Build map: date -> { platform -> orderCount }
     const byDate = new Map<string, Record<string, number>>();
     platformHistory.forEach(r => {
       if (!byDate.has(r.date)) byDate.set(r.date, {});
-      byDate.get(r.date)![r.platform] = r.orderCount;
+      const key = toKey(r.platform);
+      const day = byDate.get(r.date)!;
+      day[key] = (day[key] ?? 0) + r.orderCount;
     });
 
     // Generate last 7 days to fill gaps
@@ -203,7 +213,7 @@ export default function Dashboard() {
                   {(revScope === "today" ? rev.todayRevenue : rev.totalRevenue).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
                   <span className="text-xl text-muted-foreground font-sans font-normal ml-3">MAD encaissés</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                   <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium uppercase tracking-wider mb-1.5">
                       <TrendingUp className="w-4 h-4" /> Net Bridge
@@ -212,7 +222,7 @@ export default function Dashboard() {
                       {(revScope === "today" ? rev.netToday : rev.netTotal).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
                       <span className="text-sm font-sans font-normal ml-1.5">MAD</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">Encaissé − part livreurs</p>
+                    <p className="text-xs text-muted-foreground mt-1.5">{rev.bridgeFeePerDelivery} MAD/commande − part livreurs</p>
                   </div>
                   <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 text-orange-400 text-xs font-medium uppercase tracking-wider mb-1.5">
@@ -225,6 +235,16 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground mt-1.5">
                       {(revScope === "today" ? rev.todayDelivered : rev.deliveredOrders)} livraison(s) × {rev.driverPayPerDelivery} MAD
                     </p>
+                  </div>
+                  <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-sky-400 text-xs font-medium uppercase tracking-wider mb-1.5">
+                      <Package className="w-4 h-4" /> Gains commerçants
+                    </div>
+                    <div className="font-display text-3xl font-bold tracking-tight text-sky-400">
+                      {(revScope === "today" ? rev.restaurantPayToday : rev.restaurantPayTotal).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                      <span className="text-sm font-sans font-normal ml-1.5">MAD</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5">Restos & snacks · tous les services Bridge</p>
                   </div>
                 </div>
               </>
