@@ -4,6 +4,10 @@ import { eq, sql, gte, and, inArray } from "drizzle-orm";
 
 const router = Router();
 
+// Part versée au livreur par livraison effectuée (MAD). Doit suivre BASE_PAY
+// côté app Livreurs (6 MAD). Surchargeable via la variable d'env LIVREUR_PAY_MAD.
+const LIVREUR_PAY_MAD = Number(process.env.LIVREUR_PAY_MAD ?? 6);
+
 router.get("/summary", async (_req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -18,6 +22,7 @@ router.get("/summary", async (_req, res) => {
       totalRevenue: sql<number>`coalesce(sum(case when status = 'delivered' then total_amount else 0 end), 0)::float`,
       todayRevenue: sql<number>`coalesce(sum(case when status = 'delivered' and created_at >= ${today} then total_amount else 0 end), 0)::float`,
       todayOrders: sql<number>`count(*) filter (where created_at >= ${today})::int`,
+      todayDelivered: sql<number>`count(*) filter (where status = 'delivered' and created_at >= ${today})::int`,
     })
     .from(ordersTable);
 
@@ -49,15 +54,28 @@ router.get("/summary", async (_req, res) => {
     alertCount += activeOrders.length;
   }
 
+  const deliveredTotal = orderStats?.deliveredOrders ?? 0;
+  const todayDelivered = orderStats?.todayDelivered ?? 0;
+  const totalRevenue = orderStats?.totalRevenue ?? 0;
+  const todayRevenue = orderStats?.todayRevenue ?? 0;
+  const driverPayTotal = deliveredTotal * LIVREUR_PAY_MAD;
+  const driverPayToday = todayDelivered * LIVREUR_PAY_MAD;
+
   res.json({
     totalOrders: orderStats?.totalOrders ?? 0,
     pendingOrders: orderStats?.pendingOrders ?? 0,
     inDeliveryOrders: orderStats?.inDeliveryOrders ?? 0,
     deliveredOrders: orderStats?.deliveredOrders ?? 0,
     cancelledOrders: orderStats?.cancelledOrders ?? 0,
-    totalRevenue: orderStats?.totalRevenue ?? 0,
-    todayRevenue: orderStats?.todayRevenue ?? 0,
+    totalRevenue,
+    todayRevenue,
     todayOrders: orderStats?.todayOrders ?? 0,
+    todayDelivered,
+    driverPayToday,
+    driverPayTotal,
+    netToday: todayRevenue - driverPayToday,
+    netTotal: totalRevenue - driverPayTotal,
+    driverPayPerDelivery: LIVREUR_PAY_MAD,
     activeDrivers: driverStats?.activeDrivers ?? 0,
     averageRating: Math.round((driverStats?.averageRating ?? 0) * 10) / 10,
     alertCount,
