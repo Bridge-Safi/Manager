@@ -48,11 +48,22 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [newOrderOpen, setNewOrderOpen] = useState(false);
+  const [revScope, setRevScope] = useState<"today" | "global">("today");
   const siteStats = useSiteStats();
 
   const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary } = useGetDashboardSummary({
     query: { refetchInterval: 5000 }
   });
+
+  // Champs revenus ajoutés côté backend (/dashboard/summary), absents du client généré
+  type RevenueExtras = {
+    todayRevenue: number; totalRevenue: number;
+    todayDelivered: number; deliveredOrders: number;
+    driverPayToday: number; driverPayTotal: number;
+    netToday: number; netTotal: number;
+    driverPayPerDelivery: number;
+  };
+  const rev = summary as unknown as RevenueExtras | undefined;
 
   const { data: pendingOrders, isLoading: loadingOrders } = useListOrders(
     { status: "pending" },
@@ -147,16 +158,82 @@ export default function Dashboard() {
           </Button>
         </div>
 
+        {/* Revenus — jour / global, net Bridge vs part livreurs */}
+        <Card className="glass border-white/5 border-t-2 border-t-primary shadow-[0_-2px_10px_-2px_rgba(255,90,31,0.25)]">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {revScope === "today" ? "Revenu du jour" : "Revenu global"}
+                </h3>
+              </div>
+              <div className="flex items-center gap-1 bg-black/30 border border-white/10 rounded-full p-1 self-start sm:self-auto">
+                <button
+                  onClick={() => setRevScope("today")}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                    revScope === "today"
+                      ? "bg-gradient-to-r from-primary to-amber-500 text-primary-foreground shadow"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Aujourd'hui
+                </button>
+                <button
+                  onClick={() => setRevScope("global")}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                    revScope === "global"
+                      ? "bg-gradient-to-r from-primary to-amber-500 text-primary-foreground shadow"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Global
+                </button>
+              </div>
+            </div>
+            {loadingSummary || !rev ? (
+              <Skeleton className="h-16 w-56 bg-white/5" />
+            ) : (
+              <>
+                <div className="font-display text-5xl sm:text-6xl font-bold tracking-tighter">
+                  {(revScope === "today" ? rev.todayRevenue : rev.totalRevenue).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                  <span className="text-xl text-muted-foreground font-sans font-normal ml-3">MAD encaissés</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium uppercase tracking-wider mb-1.5">
+                      <TrendingUp className="w-4 h-4" /> Net Bridge
+                    </div>
+                    <div className="font-display text-3xl font-bold tracking-tight text-emerald-400">
+                      {(revScope === "today" ? rev.netToday : rev.netTotal).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                      <span className="text-sm font-sans font-normal ml-1.5">MAD</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5">Encaissé − part livreurs</p>
+                  </div>
+                  <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-orange-400 text-xs font-medium uppercase tracking-wider mb-1.5">
+                      <Bike className="w-4 h-4" /> Gains livreurs
+                    </div>
+                    <div className="font-display text-3xl font-bold tracking-tight text-orange-400">
+                      {(revScope === "today" ? rev.driverPayToday : rev.driverPayTotal).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                      <span className="text-sm font-sans font-normal ml-1.5">MAD</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      {(revScope === "today" ? rev.todayDelivered : rev.deliveredOrders)} livraison(s) × {rev.driverPayPerDelivery} MAD
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-          <KpiCard 
-            title="Revenu du jour" 
-            value={loadingSummary ? null : `${summary?.todayRevenue.toFixed(2)}`} 
-            unit="MAD"
-            icon={DollarSign} 
-            color="orange"
-            trend={summary && summary.todayOrders > 0 ? `${summary.todayOrders} cmd` : undefined} 
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <KpiCard 
             title="Commandes" 
             value={loadingSummary ? null : (summary?.todayOrders.toString() ?? null)} 
