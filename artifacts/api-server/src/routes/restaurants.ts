@@ -4,8 +4,47 @@ import { eq, sql, and, inArray, desc } from "drizzle-orm";
 
 const router = Router();
 
+// ── Restos inscrits sur le dashboard restaurateurs (restaurant.safi-bridge.ma) ──
+// Base Postgres separee : sans cette synchro, un resto qui s'inscrit la-bas
+// n'apparaissait JAMAIS ici (page Restaurants vide). Sync-on-read best-effort :
+// on importe les noms manquants comme vraies lignes locales.
+const RESTAURANT_DASHBOARD_BASE = process.env.RESTAURANT_DASHBOARD_BASE ?? "https://restaurant.safi-bridge.ma";
+const INTERNAL_LOOKUP_SECRET = process.env.INTERNAL_LOOKUP_SECRET ?? "bridge-safi-internal-lookup-2026";
+
+async function syncDashboardRestaurants(): Promise<void> {
+  try {
+    const resp = await fetch(`${RESTAURANT_DASHBOARD_BASE}/api/restaurant/all`, {
+      headers: { "X-Internal-Secret": INTERNAL_LOOKUP_SECRET },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!resp.ok) return;
+    const remote = (await resp.json()) as { name: string; email?: string | null; serviceType?: string | null }[];
+    if (!Array.isArray(remote) || remote.length === 0) return;
+
+    const local = await db.select({ name: restaurantsTable.name }).from(restaurantsTable);
+    const localNames = new Set(local.map((r) => r.name.trim().toLowerCase()));
+
+    for (const r of remote) {
+      const name = (r.name ?? "").trim();
+      if (!name || localNames.has(name.toLowerCase())) continue;
+      await db.insert(restaurantsTable).values({
+        name,
+        phone: "—",
+        address: "—",
+        cuisine: r.serviceType && r.serviceType !== "restaurant" ? r.serviceType : null,
+        notes: `Inscrit via restaurant.safi-bridge.ma${r.email ? ` · ${r.email}` : ""}`,
+        status: "open",
+        isActive: true,
+      });
+    }
+  } catch {
+    // best-effort : le dashboard resto peut etre injoignable, on liste le local
+  }
+}
+
 // GET /restaurants
 router.get("/", async (_req, res) => {
+  await syncDashboardRestaurants();
   const rows = await db.select().from(restaurantsTable).orderBy(restaurantsTable.name);
   res.json(rows.map(formatRestaurant));
 });
