@@ -359,6 +359,19 @@ router.post("/sync", async (req, res) => {
   if (phone) {
     [driver] = await db.update(driversTable).set(updates).where(eq(driversTable.phone, phone)).returning();
   }
+  // Repli : mêmes numéros écrits différemment ("0612345678" vs "+212612345678"
+  // vs espaces). On compare les 9 derniers chiffres, seule partie stable d'un
+  // numéro marocain, pour que la correspondance ne dépende pas du format saisi.
+  if (!driver && phone) {
+    const last9 = phone.replace(/[^0-9]/g, "").slice(-9);
+    if (last9.length === 9) {
+      [driver] = await db
+        .update(driversTable)
+        .set(updates)
+        .where(sql`right(regexp_replace(${driversTable.phone}, '[^0-9]', '', 'g'), 9) = ${last9}`)
+        .returning();
+    }
+  }
   if (!driver && driverId) {
     [driver] = await db.update(driversTable).set(updates).where(eq(driversTable.id, driverId)).returning();
   }
