@@ -7,10 +7,7 @@ const router = Router();
 // Part versée au livreur par livraison effectuée (MAD). Doit suivre BASE_PAY
 // côté app Livreurs (6 MAD). Surchargeable via la variable d'env LIVREUR_PAY_MAD.
 const LIVREUR_PAY_MAD = Number(process.env.LIVREUR_PAY_MAD ?? 6);
-// Ce que Bridge encaisse par commande livrée (frais de livraison côté client,
-// 12 MAD par défaut — DELIVERY_FEE de Bridge Eats). Le reste du montant
-// encaissé revient au commerçant. Surchargeable via BRIDGE_FEE_MAD.
-const BRIDGE_FEE_MAD = Number(process.env.BRIDGE_FEE_MAD ?? 12);
+
 
 router.get("/summary", async (_req, res) => {
   const today = new Date();
@@ -64,12 +61,7 @@ router.get("/summary", async (_req, res) => {
   const todayRevenue = orderStats?.todayRevenue ?? 0;
   const driverPayTotal = deliveredTotal * LIVREUR_PAY_MAD;
   const driverPayToday = todayDelivered * LIVREUR_PAY_MAD;
-  // Répartition : Bridge encaisse BRIDGE_FEE_MAD par commande livrée, en
-  // reverse LIVREUR_PAY_MAD au livreur ; le reste du CA va aux commerçants.
-  const bridgeFeesTotal = deliveredTotal * BRIDGE_FEE_MAD;
-  const bridgeFeesToday = todayDelivered * BRIDGE_FEE_MAD;
-  const restaurantPayTotal = Math.max(0, totalRevenue - bridgeFeesTotal);
-  const restaurantPayToday = Math.max(0, todayRevenue - bridgeFeesToday);
+
 
   res.json({
     totalOrders: orderStats?.totalOrders ?? 0,
@@ -83,12 +75,11 @@ router.get("/summary", async (_req, res) => {
     todayDelivered,
     driverPayToday,
     driverPayTotal,
-    netToday: bridgeFeesToday - driverPayToday,
-    netTotal: bridgeFeesTotal - driverPayTotal,
-    restaurantPayToday,
-    restaurantPayTotal,
+    // Répartition (zabi 2026-07-12) : 6 MAD par livraison pour le livreur,
+    // TOUT le reste du montant encaissé est à Bridge.
+    netToday: todayRevenue - driverPayToday,
+    netTotal: totalRevenue - driverPayTotal,
     driverPayPerDelivery: LIVREUR_PAY_MAD,
-    bridgeFeePerDelivery: BRIDGE_FEE_MAD,
     activeDrivers: driverStats?.activeDrivers ?? 0,
     averageRating: Math.round((driverStats?.averageRating ?? 0) * 10) / 10,
     alertCount,
