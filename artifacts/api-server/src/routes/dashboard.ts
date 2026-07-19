@@ -7,6 +7,12 @@ const router = Router();
 // Part versée au livreur par livraison effectuée (MAD). Doit suivre BASE_PAY
 // côté app Livreurs (6 MAD). Surchargeable via la variable d'env LIVREUR_PAY_MAD.
 const LIVREUR_PAY_MAD = Number(process.env.LIVREUR_PAY_MAD ?? 6);
+// Modèle complet (zabi 2026-07-18) : articles -> restaurateurs ; frais de
+// service 6,5 DH -> Bridge ; livraison 12 DH = 6 livreur (fixe) + 6 Bridge.
+// Net Bridge = 12,5 DH / commande livrée. Restaurateurs = CA - 18,5 × N.
+const BRIDGE_SERVICE_FEE_MAD = Number(process.env.BRIDGE_SERVICE_FEE_MAD ?? 6.5);
+const BRIDGE_DELIVERY_SHARE_MAD = Number(process.env.BRIDGE_DELIVERY_SHARE_MAD ?? 6);
+const BRIDGE_NET_PER_ORDER = BRIDGE_SERVICE_FEE_MAD + BRIDGE_DELIVERY_SHARE_MAD;
 
 
 router.get("/summary", async (_req, res) => {
@@ -61,6 +67,10 @@ router.get("/summary", async (_req, res) => {
   const todayRevenue = orderStats?.todayRevenue ?? 0;
   const driverPayTotal = deliveredTotal * LIVREUR_PAY_MAD;
   const driverPayToday = todayDelivered * LIVREUR_PAY_MAD;
+  const bridgeNetTotal = deliveredTotal * BRIDGE_NET_PER_ORDER;
+  const bridgeNetToday = todayDelivered * BRIDGE_NET_PER_ORDER;
+  const restaurantPayTotal = Math.max(0, totalRevenue - driverPayTotal - bridgeNetTotal);
+  const restaurantPayToday = Math.max(0, todayRevenue - driverPayToday - bridgeNetToday);
 
 
   res.json({
@@ -75,11 +85,12 @@ router.get("/summary", async (_req, res) => {
     todayDelivered,
     driverPayToday,
     driverPayTotal,
-    // Répartition (zabi 2026-07-12) : 6 MAD par livraison pour le livreur,
-    // TOUT le reste du montant encaissé est à Bridge.
-    netToday: todayRevenue - driverPayToday,
-    netTotal: totalRevenue - driverPayTotal,
+    netToday: bridgeNetToday,
+    netTotal: bridgeNetTotal,
+    restaurantPayToday,
+    restaurantPayTotal,
     driverPayPerDelivery: LIVREUR_PAY_MAD,
+    bridgeNetPerOrder: BRIDGE_NET_PER_ORDER,
     activeDrivers: driverStats?.activeDrivers ?? 0,
     averageRating: Math.round((driverStats?.averageRating ?? 0) * 10) / 10,
     alertCount,
