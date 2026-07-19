@@ -116,6 +116,34 @@ router.get("/revenue", async (_req, res) => {
   res.json(rows);
 });
 
+// GET /dashboard/payroll — paie réelle des livreurs pour BT Finance :
+// courses livrées ce mois-ci × 6 DH (LIVREUR_PAY_MAD), fixe toutes distances.
+router.get("/payroll", async (_req, res) => {
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const rows = await db
+    .select({
+      driverId: driversTable.id,
+      name: driversTable.name,
+      phone: driversTable.phone,
+      status: driversTable.status,
+      totalDeliveries: driversTable.totalDeliveries,
+      monthDeliveries: sql<number>`count(${ordersTable.id}) filter (where ${ordersTable.status} = 'delivered' and ${ordersTable.updatedAt} >= ${monthStart})::int`,
+    })
+    .from(driversTable)
+    .leftJoin(ordersTable, eq(ordersTable.driverId, driversTable.id))
+    .groupBy(driversTable.id);
+
+  res.json(rows.map((r) => ({
+    ...r,
+    monthDeliveries: r.monthDeliveries ?? 0,
+    payMonth: (r.monthDeliveries ?? 0) * LIVREUR_PAY_MAD,
+    payPerCourse: LIVREUR_PAY_MAD,
+  })));
+});
+
 router.get("/driver-stats", async (_req, res) => {
   const rows = await db
     .select({
