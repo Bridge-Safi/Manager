@@ -222,7 +222,7 @@ export default function Dashboard() {
                       {(revScope === "today" ? rev.netToday : rev.netTotal).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
                       <span className="text-sm font-sans font-normal ml-1.5">MAD</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">{rev.bridgeNetPerOrder ?? 12.5} MAD/commande (6,5 service + 6 livraison)</p>
+                    <p className="text-xs text-muted-foreground mt-1.5">6% articles + {rev.bridgeNetPerOrder ?? 12.5} MAD/commande (6,5 service + 6 livraison)</p>
                   </div>
                   <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 text-orange-400 text-xs font-medium uppercase tracking-wider mb-1.5">
@@ -244,7 +244,7 @@ export default function Dashboard() {
                       {((revScope === "today" ? rev.restaurantPayToday : rev.restaurantPayTotal) ?? 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
                       <span className="text-sm font-sans font-normal ml-1.5">MAD</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">Articles (menus) · 100% reversés</p>
+                    <p className="text-xs text-muted-foreground mt-1.5">94% des articles (menus)</p>
                   </div>
                 </div>
               </>
