@@ -13,6 +13,8 @@ const LIVREUR_PAY_MAD = Number(process.env.LIVREUR_PAY_MAD ?? 6);
 const BRIDGE_SERVICE_FEE_MAD = Number(process.env.BRIDGE_SERVICE_FEE_MAD ?? 6.5);
 const BRIDGE_DELIVERY_SHARE_MAD = Number(process.env.BRIDGE_DELIVERY_SHARE_MAD ?? 6);
 const BRIDGE_NET_PER_ORDER = BRIDGE_SERVICE_FEE_MAD + BRIDGE_DELIVERY_SHARE_MAD;
+// Commission Bridge sur les articles : 6% Bridge / 94% restaurateurs (zabi 2026-07-19)
+const BRIDGE_COMMISSION = Number(process.env.BRIDGE_COMMISSION_PCT ?? 6) / 100;
 
 
 router.get("/summary", async (_req, res) => {
@@ -67,10 +69,12 @@ router.get("/summary", async (_req, res) => {
   const todayRevenue = orderStats?.todayRevenue ?? 0;
   const driverPayTotal = deliveredTotal * LIVREUR_PAY_MAD;
   const driverPayToday = todayDelivered * LIVREUR_PAY_MAD;
-  const bridgeNetTotal = deliveredTotal * BRIDGE_NET_PER_ORDER;
-  const bridgeNetToday = todayDelivered * BRIDGE_NET_PER_ORDER;
-  const restaurantPayTotal = Math.max(0, totalRevenue - driverPayTotal - bridgeNetTotal);
-  const restaurantPayToday = Math.max(0, todayRevenue - driverPayToday - bridgeNetToday);
+  const articlesTotal = Math.max(0, totalRevenue - driverPayTotal - deliveredTotal * BRIDGE_NET_PER_ORDER);
+  const articlesToday = Math.max(0, todayRevenue - driverPayToday - todayDelivered * BRIDGE_NET_PER_ORDER);
+  const bridgeNetTotal = deliveredTotal * BRIDGE_NET_PER_ORDER + articlesTotal * BRIDGE_COMMISSION;
+  const bridgeNetToday = todayDelivered * BRIDGE_NET_PER_ORDER + articlesToday * BRIDGE_COMMISSION;
+  const restaurantPayTotal = articlesTotal * (1 - BRIDGE_COMMISSION);
+  const restaurantPayToday = articlesToday * (1 - BRIDGE_COMMISSION);
 
 
   res.json({
