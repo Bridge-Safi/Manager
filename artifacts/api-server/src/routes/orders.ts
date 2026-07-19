@@ -78,6 +78,23 @@ router.post("/", async (req, res) => {
     return;
   }
 
+  // Idempotent par orderNumber : la meme commande arrivait parfois deux fois
+  // (mirror Bridge-safi + webhook) -> CA double et paie livreur comptee 2x.
+  const [existing] = await db
+    .select()
+    .from(ordersTable)
+    .where(eq(ordersTable.orderNumber, parsed.data.orderNumber))
+    .limit(1);
+  if (existing) {
+    res.status(200).json({
+      ...existing,
+      driverName: null,
+      createdAt: existing.createdAt.toISOString(),
+      updatedAt: existing.updatedAt.toISOString(),
+    });
+    return;
+  }
+
   const [order] = await db
     .insert(ordersTable)
     .values({
@@ -418,6 +435,20 @@ router.post("/webhook", async (req, res) => {
   }
 
   const finalOrderNumber = orderNumber ?? generateOrderNumber();
+
+  // Idempotent : ne pas recréer une commande déjà reçue (doublons = CA et paie x2)
+  if (orderNumber) {
+    const [dup] = await db.select().from(ordersTable).where(eq(ordersTable.orderNumber, orderNumber)).limit(1);
+    if (dup) {
+      res.status(200).json({
+        ...dup,
+        driverName: null,
+        createdAt: dup.createdAt.toISOString(),
+        updatedAt: dup.updatedAt.toISOString(),
+      });
+      return;
+    }
+  }
 
   const validServiceTypes = ["nourriture", "taxi", "confort", "tabac", "fleur", "fleurs", "pharmacie", "souk", "boulangerie", "supermarche"];
   const resolvedServiceType = serviceType && validServiceTypes.includes(serviceType) ? serviceType : "nourriture";

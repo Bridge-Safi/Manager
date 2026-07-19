@@ -134,7 +134,9 @@ router.get("/payroll", async (_req, res) => {
       phone: driversTable.phone,
       status: driversTable.status,
       totalDeliveries: driversTable.totalDeliveries,
-      monthDeliveries: sql<number>`count(${ordersTable.id}) filter (where ${ordersTable.status} = 'delivered' and ${ordersTable.updatedAt} >= ${monthStart})::int`,
+      // count(DISTINCT order_number) : des doublons de la meme commande (double
+      // insertion mirror/webhook) faisaient payer 12 DH au lieu de 6 par course.
+      monthDeliveries: sql<number>`count(distinct ${ordersTable.orderNumber}) filter (where ${ordersTable.status} = 'delivered' and ${ordersTable.updatedAt} >= ${monthStart})::int`,
     })
     .from(driversTable)
     .leftJoin(ordersTable, eq(ordersTable.driverId, driversTable.id))
