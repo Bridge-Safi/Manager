@@ -204,7 +204,7 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
 
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("active");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -252,6 +252,8 @@ export default function OrdersPage() {
       statusFilter === "all" ||
       (statusFilter === "active"
         ? order.status !== "delivered" && order.status !== "cancelled"
+        : statusFilter === "non_cancelled"
+        ? order.status !== "cancelled"
         : order.status === statusFilter);
     const matchesService = serviceFilter === "all" || order.serviceType === serviceFilter;
     const matchesPlatform = platformFilter === "all" || order.platform === platformFilter;
@@ -433,8 +435,9 @@ export default function OrdersPage() {
                     <SelectValue placeholder="Filtrer par statut" />
                   </SelectTrigger>
                   <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
-                    <SelectItem value="active">🟢 Commandes actives</SelectItem>
                     <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="non_cancelled">🟢 Sauf annulées</SelectItem>
+                    <SelectItem value="active">⚡ En cours uniquement</SelectItem>
                     <SelectItem value="pending">⏳ En attente</SelectItem>
                     <SelectItem value="assigned">📦 Assignée</SelectItem>
                     <SelectItem value="in_delivery">🛵 En livraison</SelectItem>
