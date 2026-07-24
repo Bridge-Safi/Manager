@@ -4,3 +4,4 @@
 - [Manager access code](manager-code.md) — default 9-digit code is 159753852; overridable via MANAGER_ACCESS_CODE env var (manager-auth.ts)
 - [DB schema setup](db-setup.md) — Drizzle migration run via `pnpm --filter db push`; tables: orders, drivers, restaurants, activities, clients, players, reviews, reset_requests, grado_subscriptions, site_stats, visit_logs
 - [Repo origins](repo-origins.md) — Jeux repo = safi-runner (identical); Livreurs repo = driver-app updates + assign/dispatch routes (incompatible schema, deferred); Bridge-Safi = separate orders/SSE stack
+- [Imported monorepo setup](imported-monorepo-setup.md) — install the frozen pnpm lockfile before checking workflows; imported apps may otherwise fail with missing tool binaries
