@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, siteStatsTable, visitLogsTable } from "@workspace/db";
+import { db, siteStatsTable, visitLogsTable, clientsTable } from "@workspace/db";
 import { eq, sql, count } from "drizzle-orm";
 
 const router = Router();
@@ -12,13 +12,17 @@ async function ensureStatsRow() {
   return rows[0] ?? (await db.select().from(siteStatsTable).limit(1))[0];
 }
 
-// GET /stats — retourne les compteurs
+// GET /stats — retourne les compteurs réels depuis les tables source
 router.get("/", async (_req, res) => {
-  const stats = await ensureStatsRow();
+  const [visitsResult, registrationsResult] = await Promise.all([
+    db.select({ total: count() }).from(visitLogsTable),
+    db.select({ total: count() }).from(clientsTable),
+  ]);
+
   res.json({
-    visits: stats.visits,
-    registrations: stats.registrations,
-    updatedAt: stats.updatedAt.toISOString(),
+    visits: visitsResult[0]?.total ?? 0,
+    registrations: registrationsResult[0]?.total ?? 0,
+    updatedAt: new Date().toISOString(),
   });
 });
 
