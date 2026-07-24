@@ -9,60 +9,6 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "API Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Manager Dashboard"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Driver App"
-
-[[workflows.workflow]]
-name = "API Server"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=8080 pnpm --filter @workspace/api-server run dev"
-waitForPort = 8080
-
-[[workflows.workflow]]
-name = "Manager Dashboard"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=23696 BASE_PATH=/ pnpm --filter @workspace/delivery-manager run dev"
-waitForPort = 23696
-
-[[workflows.workflow]]
-name = "Driver App"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=18861 BASE_PATH=/driver-app/ pnpm --filter @workspace/driver-app run dev"
-waitForPort = 18861
 
 [agent]
 stack = "PNPM_WORKSPACE"
@@ -123,15 +69,3 @@ externalPort = 5000
 [[ports]]
 localPort = 24492
 externalPort = 4200
-
-[userenv]
-
-[userenv.shared]
-LIVREUR_API_KEY = "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32"
-GMAIL_USER = "bridge.safi@gmail.com"
-RAILWAY_PUBLIC_HOST = "thomas.proxy.rlwy.net:49176"
-DATABASE_PUBLIC_URL = "postgresql://postgres:mIdNsEbxtMNhizPGpNARJiqGvPjUmiLp@thomas.proxy.rlwy.net:49176/railway"
-VAPID_PUBLIC_KEY = "BGLGIE_EC4J3GrJ8VXkxPkb9_GSHASe2Cew2AL8grqx9cbGffntfYKAxOjfJhGdcXYVtux-XQNtRD1hQek3qyZQ"
-VAPID_SUBJECT = "mailto:contact@bridgesafi.com"
-VITE_MANAGER_API_KEY = "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32"
-VITE_MANAGER_API_URL = "/api/livreur/sync"
