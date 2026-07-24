@@ -8,6 +8,7 @@ import { DispatchAlert } from "@/components/DispatchAlert";
 import { useDispatchPoller } from "@/hooks/useDispatchPoller";
 import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
 import { useLocationReporter } from "@/hooks/useLocationReporter";
+import { useOrderSSE } from "@/hooks/useOrderSSE";
 import { useQueryClient } from "@tanstack/react-query";
 
 const TC = "#E85C30";
@@ -22,6 +23,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const pendingDispatch = useDispatchPoller(livreurId);
   useLocationReporter(livreurId);
+  useOrderSSE(livreurId);
 
   const { data: profile } = useGetDeliverer(livreurId, {
     query: { enabled: !!livreurId, queryKey: getGetDelivererQueryKey(livreurId) },
