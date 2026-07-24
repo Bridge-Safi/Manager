@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { db, reviewsTable, driversTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { db, reviewsTable, driversTable, activitiesTable } from "@workspace/db";
+import { eq, desc, sql, like } from "drizzle-orm";
 import { logActivity } from "../lib/log-activity";
 import { emitToDriver } from "../lib/event-bus";
+import { setDriverNotification } from "../lib/driver-notification-store";
 
 const router = Router();
 
@@ -28,11 +29,13 @@ router.post("/:id/refuse", async (req, res) => {
     details: `${driver.name} a refusé une commande (total: ${driver.totalRefusals} refus)`,
   });
 
-  emitToDriver(driverId, "driver:notification", {
-    type: "refuse",
+  const notifPayload = {
+    type: "refuse" as const,
     title: "Refus enregistré",
     message: `Un refus a été enregistré sur votre compte (total : ${driver.totalRefusals} refus). Évitez les refus répétés pour garder votre compte actif.`,
-  });
+  };
+  setDriverNotification(driverId, notifPayload);
+  emitToDriver(driverId, "driver:notification", notifPayload);
 
   res.json({
     ...driver,
@@ -64,11 +67,28 @@ router.post("/:id/warn", async (req, res) => {
     details: `⚠️ Avertissement envoyé à ${driver.name}: ${reason}`,
   });
 
-  emitToDriver(driverId, "driver:notification", {
-    type: "warn",
-    title: "Avertissement du manager",
-    message: reason,
-  });
+  // Count warnings for this specific driver
+  const [warnCountRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(activitiesTable)
+    .where(like(activitiesTable.details, `%Avertissement%envoyé à ${driver.name}%`));
+
+  const totalWarnings = (warnCountRow?.count ?? 0) + 1; // +1 for the one we just added
+
+  let warnMessage = reason;
+  if (totalWarnings >= 3) {
+    warnMessage = `${reason}\n\n⚠️ Attention : vous avez reçu ${totalWarnings} avertissements. À partir de 3 avertissements, votre compte peut être suspendu définitivement.`;
+  } else {
+    warnMessage = `${reason}\n\n(Avertissement ${totalWarnings}/3 — à 3 avertissements, votre compte peut être suspendu.)`;
+  }
+
+  const warnPayload = {
+    type: "warn" as const,
+    title: "⚠️ Avertissement du Manager",
+    message: warnMessage,
+  };
+  setDriverNotification(driverId, warnPayload);
+  emitToDriver(driverId, "driver:notification", warnPayload);
 
   res.json({
     ...driver,
@@ -105,13 +125,15 @@ router.patch("/:id/block", async (req, res) => {
       : `🔓 Compte de ${driver.name} débloqué par le manager`,
   });
 
-  emitToDriver(driverId, "driver:notification", {
-    type: blocked ? "block" : "unblock",
-    title: blocked ? "Compte bloqué" : "Compte débloqué",
+  const blockPayload = {
+    type: (blocked ? "block" : "unblock") as "block" | "unblock",
+    title: blocked ? "🔒 Compte bloqué" : "🔓 Compte débloqué",
     message: blocked
-      ? "Votre compte a été bloqué par le manager. Vous ne pouvez plus recevoir de commandes. Contactez l'administration."
+      ? "Votre compte a été bloqué par le manager. Vous ne pouvez plus recevoir de commandes. Contactez l'administration pour plus d'informations."
       : "Votre compte a été débloqué par le manager. Vous pouvez à nouveau recevoir des commandes.",
-  });
+  };
+  setDriverNotification(driverId, blockPayload);
+  emitToDriver(driverId, "driver:notification", blockPayload);
 
   res.json({
     ...driver,

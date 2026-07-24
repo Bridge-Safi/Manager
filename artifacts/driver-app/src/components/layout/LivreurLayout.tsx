@@ -10,6 +10,7 @@ import { useDispatchPoller } from "@/hooks/useDispatchPoller";
 import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
 import { useLocationReporter } from "@/hooks/useLocationReporter";
 import { useOrderSSE } from "@/hooks/useOrderSSE";
+import { useDriverNotificationPoller } from "@/hooks/useDriverNotificationPoller";
 import { useQueryClient } from "@tanstack/react-query";
 
 const TC = "#E85C30";
@@ -24,7 +25,8 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const pendingDispatch = useDispatchPoller(livreurId);
   useLocationReporter(livreurId);
-  const { managerNotification, clearManagerNotification } = useOrderSSE(livreurId);
+  useOrderSSE(livreurId);
+  const { notification: managerNotification, clear: clearManagerNotification } = useDriverNotificationPoller(livreurId);
 
   const { data: profile } = useGetDeliverer(livreurId, {
     query: { enabled: !!livreurId, queryKey: getGetDelivererQueryKey(livreurId) },

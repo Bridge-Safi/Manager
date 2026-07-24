@@ -13,6 +13,7 @@ import { logActivity } from "../lib/log-activity";
 import bcrypt from "bcryptjs";
 import { syncDriverToLivreurs } from "../lib/sync-livreurs";
 import { getRealDriverStats } from "../lib/driver-stats";
+import { popDriverNotification } from "../lib/driver-notification-store";
 
 const router = Router();
 
@@ -295,6 +296,14 @@ router.get("/:id/today", async (req, res) => {
     activeOrderNumber: activeOrder[0]?.orderNumber ?? null,
     lastActivityAt: lastActivity[0]?.createdAt?.toISOString() ?? null,
   });
+});
+
+// GET /drivers/:id/notification — driver app polls this every 5s
+// Returns the pending manager notification and clears it (one-shot)
+router.get("/:id/notification", (req, res) => {
+  const driverId = Number(req.params.id);
+  const notif = popDriverNotification(driverId);
+  res.json(notif); // null if nothing pending
 });
 
 export default router;
