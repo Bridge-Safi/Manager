@@ -23,8 +23,10 @@ import {
   ChefHat,
   TrendingUp,
   Users,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { cn } from "@/lib/utils";
@@ -78,6 +80,17 @@ function RestaurantStatusDot({ status }: { status: string }) {
   return <span className={cn("inline-block w-2 h-2 rounded-full shrink-0", color)} />;
 }
 
+function MapResizeHandler({ isFullscreen }: { isFullscreen: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const resizeTimer = window.setTimeout(() => map.invalidateSize(), 150);
+    return () => window.clearTimeout(resizeTimer);
+  }, [isFullscreen, map]);
+
+  return null;
+}
+
 export default function SurveillancePage() {
   const { data: drivers } = useListDrivers({
     query: { refetchInterval: 5000 }
@@ -97,10 +110,28 @@ export default function SurveillancePage() {
   });
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
 
   useEffect(() => {
     setLastUpdated(new Date());
   }, [activities, alerts, drivers, restaurants]);
+
+  useEffect(() => {
+    if (!isMapFullscreen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMapFullscreen(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMapFullscreen]);
 
   const availableDrivers = drivers?.filter(d => d.status === "available").length ?? 0;
   const busyDrivers = drivers?.filter(d => d.status === "busy").length ?? 0;
@@ -161,15 +192,41 @@ export default function SurveillancePage() {
           {/* Left — Map + Restaurants */}
           <div className="xl:col-span-2 space-y-6 flex flex-col h-full">
             {/* Map Container */}
-            <Card className="glass border-white/5 shadow-2xl overflow-hidden flex-1 min-h-[400px] relative rounded-2xl flex flex-col">
+            <Card
+              className={cn(
+                "glass border-white/5 shadow-2xl overflow-hidden relative rounded-2xl flex flex-col",
+                isMapFullscreen
+                  ? "fixed inset-0 z-[1000] h-[100dvh] w-screen rounded-none border-0"
+                  : "flex-1 min-h-[400px]"
+              )}
+            >
               <div className="absolute top-4 left-4 z-[400] bg-background/90 backdrop-blur border border-white/10 px-3 py-2 rounded-xl shadow-lg flex items-center gap-3 pointer-events-none">
                  <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                    <span className="text-sm font-mono font-medium">GPS Actif ({drivers?.filter(d => d.lat && d.lng).length || 0})</span>
                  </div>
               </div>
-              <div style={{ height: '100%', width: '100%', flex: 1, zIndex: 0 }} className="relative z-0">
+              <button
+                type="button"
+                onClick={() => setIsMapFullscreen((current) => !current)}
+                aria-label={isMapFullscreen ? "Quitter le plein écran GPS" : "Afficher le GPS en plein écran"}
+                className="absolute top-4 right-4 z-[400] inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-background/90 px-3 text-xs font-semibold text-foreground shadow-lg backdrop-blur transition-colors hover:border-primary/50 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {isMapFullscreen ? (
+                  <>
+                    <Minimize2 className="h-4 w-4 text-primary" />
+                    <span className="hidden sm:inline">Quitter</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="h-4 w-4 text-primary" />
+                    <span className="hidden sm:inline">GPS en grand</span>
+                  </>
+                )}
+              </button>
+              <div style={{ height: '100%', width: '100%', flex: 1, zIndex: 0 }} className="relative z-0 min-h-0">
                 <MapContainer center={[31.7917, -7.0926]} zoom={6} style={{ height: '100%', width: '100%', background: '#090d18' }}>
+                  <MapResizeHandler isFullscreen={isMapFullscreen} />
                   <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
