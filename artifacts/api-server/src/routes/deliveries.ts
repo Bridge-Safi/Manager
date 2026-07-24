@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, driversTable, ordersTable } from "@workspace/db";
 import { eq, and, desc, sql, gte, notInArray } from "drizzle-orm";
 import { emitEvent } from "../lib/event-bus";
+import { getRealDriverStats } from "../lib/driver-stats";
 
 // Ces types de service sont des livraisons à pied/moto — les livreurs les reçoivent
 const DELIVERY_SERVICE_TYPES = ["nourriture", "tabac", "fleur", "fleurs", "pharmacie", "souk", "boulangerie", "supermarche"] as const;
@@ -80,13 +81,14 @@ router.get("/stats", async (req, res) => {
       )
     );
 
+  const realStats = await getRealDriverStats(driver.id, driver.services);
   res.json({
     delivererId,
     completedToday: todayStats?.count ?? 0,
     inProgressCount: inProgress?.count ?? 0,
-    totalDeliveries: driver.totalDeliveries,
-    totalRevenue: driver.totalRevenue,
-    averageRating: driver.rating,
+    totalDeliveries: realStats.totalDeliveries,
+    totalRevenue: realStats.totalRevenue,
+    averageRating: realStats.rating,
     currentStreak: 0,
   });
 });

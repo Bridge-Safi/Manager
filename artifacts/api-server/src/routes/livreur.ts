@@ -4,6 +4,7 @@ import { eq, and, or, sql, desc } from "drizzle-orm";
 import { livreurAuth } from "../lib/livreur-auth";
 import { logActivity } from "../lib/log-activity";
 import { emitEvent } from "../lib/event-bus";
+import { getRealDriverStats } from "../lib/driver-stats";
 
 const router = Router();
 
@@ -58,8 +59,9 @@ router.get("/me/:driverId", async (req, res) => {
     )
     .orderBy(desc(ordersTable.createdAt));
 
+  const realStats = await getRealDriverStats(driver.id, driver.services);
   res.json({
-    driver: formatDriver(driver as Record<string, unknown>),
+    driver: formatDriver({ ...driver, ...realStats } as Record<string, unknown>),
     activeOrders: activeOrders.map(o => formatOrder(o as Record<string, unknown>)),
   });
 });
@@ -443,9 +445,10 @@ router.post("/sync", async (req, res) => {
     )
     .limit(5);
 
+  const realStats = await getRealDriverStats(driver.id, driver.services);
   res.json({
     ok: true,
-    driver: formatDriver(driver as Record<string, unknown>),
+    driver: formatDriver({ ...driver, ...realStats } as Record<string, unknown>),
     activeOrders: activeOrders.map(o => formatOrder(o as Record<string, unknown>)),
   });
 });

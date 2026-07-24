@@ -12,18 +12,27 @@ import {
 import { logActivity } from "../lib/log-activity";
 import bcrypt from "bcryptjs";
 import { syncDriverToLivreurs } from "../lib/sync-livreurs";
+import { getRealDriverStats } from "../lib/driver-stats";
 
 const router = Router();
 
-const formatDriver = (d: typeof driversTable.$inferSelect) => ({
+const formatDriver = (d: typeof driversTable.$inferSelect, stats?: Awaited<ReturnType<typeof getRealDriverStats>>) => ({
   ...d,
+  ...(stats ?? {
+    totalDeliveries: d.totalDeliveries,
+    totalRevenue: d.totalRevenue,
+    rating: d.rating,
+  }),
   createdAt: d.createdAt.toISOString(),
   lastActiveAt: d.lastActiveAt ? d.lastActiveAt.toISOString() : null,
 });
 
 router.get("/", async (_req, res) => {
   const rows = await db.select().from(driversTable).orderBy(driversTable.id);
-  res.json(rows.map(formatDriver));
+  const formatted = await Promise.all(rows.map(async (driver) => (
+    formatDriver(driver, await getRealDriverStats(driver.id, driver.services))
+  )));
+  res.json(formatted);
 });
 
 router.post("/auth", async (req, res) => {
@@ -51,7 +60,7 @@ router.post("/auth", async (req, res) => {
     res.status(403).json({ error: "Compte bloqué — contactez le manager" });
     return;
   }
-  res.json(formatDriver(driver));
+  res.json(formatDriver(driver, await getRealDriverStats(driver.id, driver.services)));
 });
 
 router.post("/", async (req, res) => {
@@ -119,7 +128,7 @@ router.get("/:id", async (req, res) => {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-  res.json(formatDriver(driver));
+  res.json(formatDriver(driver, await getRealDriverStats(driver.id, driver.services)));
 });
 
 router.delete("/:id", async (req, res) => {
@@ -198,7 +207,7 @@ router.patch("/:id", async (req, res) => {
       details: `${updated.name} ${labelMap[bodyParsed.data.status] ?? "a changé de statut"}`,
     });
   }
-  res.json(formatDriver(updated));
+  res.json(formatDriver(updated, await getRealDriverStats(updated.id, updated.services)));
 });
 
 router.patch("/:id/location", async (req, res) => {
@@ -222,7 +231,7 @@ router.patch("/:id/location", async (req, res) => {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-  res.json(formatDriver(updated));
+  res.json(formatDriver(updated, await getRealDriverStats(updated.id, updated.services)));
 });
 
 router.get("/:id/activities", async (req, res) => {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, ordersTable, driversTable } from "@workspace/db";
+import { db, ordersTable, driversTable, reviewsTable } from "@workspace/db";
 import { eq, sql, gte, and, inArray } from "drizzle-orm";
 
 const router = Router();
@@ -38,9 +38,13 @@ router.get("/summary", async (_req, res) => {
   const [driverStats] = await db
     .select({
       activeDrivers: sql<number>`count(*) filter (where status != 'offline')::int`,
-      averageRating: sql<number>`coalesce(avg(rating), 0)::float`,
     })
     .from(driversTable);
+  const [ratingStats] = await db
+    .select({
+      averageRating: sql<number>`coalesce(avg(${reviewsTable.rating}), 0)::float`,
+    })
+    .from(reviewsTable);
 
   // Calculate alert count inline
   let alertCount = 0;
@@ -96,7 +100,7 @@ router.get("/summary", async (_req, res) => {
     driverPayPerDelivery: LIVREUR_PAY_MAD,
     bridgeNetPerOrder: BRIDGE_NET_PER_ORDER,
     activeDrivers: driverStats?.activeDrivers ?? 0,
-    averageRating: Math.round((driverStats?.averageRating ?? 0) * 10) / 10,
+    averageRating: Math.round((ratingStats?.averageRating ?? 0) * 10) / 10,
     alertCount,
   });
 });
@@ -151,23 +155,37 @@ router.get("/payroll", async (_req, res) => {
 });
 
 router.get("/driver-stats", async (_req, res) => {
-  const rows = await db
-    .select({
-      driverId: driversTable.id,
-      driverName: driversTable.name,
-      deliveries: driversTable.totalDeliveries,
-      revenue: driversTable.totalRevenue,
-      rating: driversTable.rating,
-      status: driversTable.status,
-    })
-    .from(driversTable)
-    .orderBy(driversTable.totalDeliveries);
+  const rows = await db.select().from(driversTable).orderBy(driversTable.id);
+  const stats = await Promise.all(rows.map(async (driver) => {
+    const [deliveryStats] = await db
+      .select({
+        deliveries: sql<number>`count(distinct ${ordersTable.orderNumber}) filter (where ${ordersTable.status} = 'delivered')::int`,
+        orderRevenue: sql<number>`coalesce(sum(${ordersTable.totalAmount}) filter (where ${ordersTable.status} = 'delivered'), 0)::float`,
+      })
+      .from(ordersTable)
+      .where(eq(ordersTable.driverId, driver.id));
+    const [reviewStats] = await db
+      .select({
+        rating: sql<number>`round(avg(${reviewsTable.rating})::numeric, 1)::float`,
+      })
+      .from(reviewsTable)
+      .where(eq(reviewsTable.driverId, driver.id));
+    const deliveries = deliveryStats?.deliveries ?? 0;
+    const revenue = driver.services === "nourriture"
+      ? deliveries * LIVREUR_PAY_MAD
+      : deliveryStats?.orderRevenue ?? 0;
 
-  res.json(rows.map((r) => ({
-    ...r,
-    revenue: r.revenue ?? 0,
-    rating: r.rating ?? 5.0,
-  })));
+    return {
+      driverId: driver.id,
+      driverName: driver.name,
+      deliveries,
+      revenue,
+      rating: reviewStats?.rating ?? 0,
+      status: driver.status,
+    };
+  }));
+
+  res.json(stats);
 });
 
 router.get("/customer-stats", async (_req, res) => {

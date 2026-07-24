@@ -27,7 +27,7 @@ import {
 } from "@workspace/api-client-react";
 import { DriverStatusBadge } from "@/components/status-badges";
 import {
-  Phone, Star, MapPin, Loader2, Activity as ActivityIcon,
+  Phone, Mail, Star, MapPin, Loader2, Activity as ActivityIcon,
   CheckCircle2, Package, Bike, X, Circle, WifiOff, Clock,
   DollarSign, KeyRound, LockKeyhole, AlertTriangle, Ban,
   Unlock, ShieldAlert, ThumbsUp, ThumbsDown, Minus, MessageSquarePlus, Trash2,
@@ -539,6 +539,10 @@ export default function DriversPage() {
                           <div className="text-xs font-mono text-muted-foreground flex items-center gap-1.5 bg-black/20 px-2 py-0.5 rounded border border-white/5 w-max">
                             <Phone className="w-3 h-3" /> {driver.phone}
                           </div>
+                          <div className="text-[11px] font-mono text-muted-foreground/80 flex items-center gap-1.5 mt-1 max-w-[190px] truncate" title={driver.email ?? "Adresse e-mail non renseignée"}>
+                            <Mail className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{driver.email ?? "E-mail non renseigné"}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -576,7 +580,12 @@ export default function DriversPage() {
                         <div className="text-center">
                           <div className="text-[10px] text-muted-foreground uppercase font-sans tracking-widest mb-1">Note</div>
                           <div className="text-xl font-display font-bold flex items-center justify-center gap-1">
-                            {driver.rating.toFixed(1)} <Star className="w-4 h-4 fill-amber-500 text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]" />
+                            {driver.rating > 0 ? driver.rating.toFixed(1) : "—"} <Star className={cn(
+                              "w-4 h-4",
+                              driver.rating > 0
+                                ? "fill-amber-500 text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]"
+                                : "text-white/20"
+                            )} />
                           </div>
                         </div>
                       </div>
