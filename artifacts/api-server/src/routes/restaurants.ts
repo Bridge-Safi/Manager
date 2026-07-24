@@ -74,7 +74,18 @@ async function syncDashboardRestaurants(): Promise<void> {
       const name = (r.name ?? "").trim();
       if (!name || localNames.has(name.toLowerCase())) continue;
       const rawType = (r.serviceType ?? "").toLowerCase().trim();
-      const platform = SERVICE_TO_PLATFORM[rawType] ?? "eats";
+      // Si serviceType absent, deviner la plateforme d'après le nom
+      const nameLower = name.toLowerCase();
+      const guessedPlatform =
+        nameLower.includes("tabac")                                   ? "tabac"      :
+        nameLower.includes("pharmacie")                               ? "pharmacie"  :
+        nameLower.includes("souk")                                    ? "souk"       :
+        nameLower.includes("fleur")                                   ? "fleurs"     :
+        nameLower.includes("boulangerie") || nameLower.includes("pain") ? "boulangerie" :
+        (nameLower.includes("supermarché") || nameLower.includes("supermarche") ||
+         nameLower.includes("marjane") || nameLower.includes("aswak"))  ? "supermarche" :
+        null;
+      const platform = SERVICE_TO_PLATFORM[rawType] ?? guessedPlatform ?? "eats";
       await db.insert(restaurantsTable).values({
         name,
         phone: "—",
@@ -95,7 +106,11 @@ async function syncDashboardRestaurants(): Promise<void> {
 router.get("/", async (_req, res) => {
   await syncDashboardRestaurants();
   geocodePendingRestaurants().catch(() => {}); // best-effort, non-bloquant
-  const rows = await db.select().from(restaurantsTable).orderBy(restaurantsTable.name);
+  const rows = await db
+    .select()
+    .from(restaurantsTable)
+    .where(eq(restaurantsTable.isActive, true))
+    .orderBy(restaurantsTable.name);
   res.json(rows.map(formatRestaurant));
 });
 

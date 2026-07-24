@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, Store, Gamepad2, UserCircle, Send, Menu } from "lucide-react";
+import { LayoutDashboard, ListOrdered, Users, BarChart3, Eye, ShoppingBag, Gamepad2, UserCircle, Send, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./notification-bell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: "/surveillance", label: "Surveillance", icon: Eye },
   { href: "/orders", label: "Commandes", icon: ListOrdered },
   { href: "/drivers", label: "Livreurs", icon: Users },
-  { href: "/restaurants", label: "Restaurants", icon: Store },
+  { href: "/restaurants", label: "Commerçants", icon: ShoppingBag },
   { href: "/clients", label: "Clients", icon: UserCircle },
   { href: "/safi-runner", label: "Safi Runner", icon: Gamepad2 },
   { href: "/analytics", label: "Analyses", icon: BarChart3 },
