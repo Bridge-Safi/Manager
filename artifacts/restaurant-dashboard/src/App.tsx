@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
+import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import Orders from "@/pages/orders";
 import OrderDetail from "@/pages/order-detail";
@@ -53,7 +54,8 @@ function Router() {
       } />
       <Route path="/login" component={() => user ? <Redirect to="/" /> : <Login />} />
       <Route path="/sign-in" component={() => user ? <Redirect to="/" /> : <Login />} />
-      <Route path="/sign-up" component={() => user ? <Redirect to="/" /> : <Login />} />
+      <Route path="/sign-up" component={() => user ? <Redirect to="/" /> : <Register />} />
+      <Route path="/register" component={() => user ? <Redirect to="/" /> : <Register />} />
       <Route path="/dashboard" component={() =>
         <AlarmProvider><ProtectedRoute component={Dashboard} /></AlarmProvider>
       } />

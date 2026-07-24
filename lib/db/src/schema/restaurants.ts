@@ -13,6 +13,7 @@ export const restaurantsTable = pgTable("restaurants", {
   platform: text("platform").notNull().default("eats"),
   isActive: boolean("is_active").notNull().default(true),
   lastOrderAt: timestamp("last_order_at"),
+  email: text("email"),
   passwordHash: text("password_hash"),
   lat: real("lat"),
   lng: real("lng"),

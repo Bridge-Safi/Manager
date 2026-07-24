@@ -12,10 +12,20 @@ export interface AuthUser {
   restaurantId?: number | null;
 }
 
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  platform: string;
+  address: string;
+  phone: string;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (identifier: string) => Promise<void>;
+  login: (identifier: string, password?: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
 }
 
@@ -46,11 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = async (identifier: string) => {
+  const login = async (identifier: string, password?: string) => {
     const res = await fetch(`${BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier }),
+      body: JSON.stringify({ identifier, password }),
     });
 
     if (!res.ok) {
@@ -67,13 +77,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data as AuthUser);
   };
 
+  const register = async (formData: RegisterData) => {
+    const res = await fetch(`${BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as Record<string, string>).error ?? "Inscription échouée");
+    }
+
+    const data = await res.json();
+    if (!data.token) {
+      throw new Error("Inscription échouée. Veuillez réessayer.");
+    }
+
+    localStorage.setItem(TOKEN_KEY, data.token);
+    setUser(data as AuthUser);
+  };
+
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
