@@ -27,6 +27,7 @@ export async function getRealDriverStats(driverId: number, services: string) {
   return {
     totalDeliveries: deliveries,
     totalRevenue: revenue,
-    rating: reviewStats?.rating ?? 0,
+    // null means "no reviews yet" — caller should fall back to the stored DB rating
+    rating: (reviewStats?.rating as number | null) ?? null,
   };
 }

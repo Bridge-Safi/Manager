@@ -7,6 +7,7 @@ const router = Router();
 router.get("/", (req, res) => {
   const clientId = randomUUID();
   const role = (req.query.role as string) ?? "unknown";
+  const driverId = req.query.driverId ? Number(req.query.driverId) : undefined;
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -16,7 +17,7 @@ router.get("/", (req, res) => {
 
   res.write(`event: connected\ndata: ${JSON.stringify({ clientId, role, clients: getClientCount() + 1 })}\n\n`);
 
-  addSSEClient(clientId, res, role);
+  addSSEClient(clientId, res, role, driverId);
 
   const heartbeat = setInterval(() => {
     try {

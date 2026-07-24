@@ -5,6 +5,7 @@ import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { DispatchAlert } from "@/components/DispatchAlert";
+import { ManagerNotificationAlert } from "@/components/ManagerNotificationAlert";
 import { useDispatchPoller } from "@/hooks/useDispatchPoller";
 import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
 import { useLocationReporter } from "@/hooks/useLocationReporter";
@@ -23,7 +24,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const pendingDispatch = useDispatchPoller(livreurId);
   useLocationReporter(livreurId);
-  useOrderSSE(livreurId);
+  const { managerNotification, clearManagerNotification } = useOrderSSE(livreurId);
 
   const { data: profile } = useGetDeliverer(livreurId, {
     query: { enabled: !!livreurId, queryKey: getGetDelivererQueryKey(livreurId) },
@@ -57,6 +58,11 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
       {pendingDispatch && (
         <DispatchAlert delivererId={livreurId} deliveryId={pendingDispatch.deliveryId} />
       )}
+
+      <ManagerNotificationAlert
+        notification={managerNotification}
+        onDismiss={clearManagerNotification}
+      />
 
       {/* Sidebar — desktop */}
       <aside

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, reviewsTable, driversTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { logActivity } from "../lib/log-activity";
+import { emitToDriver } from "../lib/event-bus";
 
 const router = Router();
 
@@ -25,6 +26,12 @@ router.post("/:id/refuse", async (req, res) => {
     orderId: req.body?.orderId ?? null,
     action: "order_cancelled",
     details: `${driver.name} a refusé une commande (total: ${driver.totalRefusals} refus)`,
+  });
+
+  emitToDriver(driverId, "driver:notification", {
+    type: "refuse",
+    title: "Refus enregistré",
+    message: `Un refus a été enregistré sur votre compte (total : ${driver.totalRefusals} refus). Évitez les refus répétés pour garder votre compte actif.`,
   });
 
   res.json({
@@ -55,6 +62,12 @@ router.post("/:id/warn", async (req, res) => {
     driverId,
     action: "status_offline",
     details: `⚠️ Avertissement envoyé à ${driver.name}: ${reason}`,
+  });
+
+  emitToDriver(driverId, "driver:notification", {
+    type: "warn",
+    title: "Avertissement du manager",
+    message: reason,
   });
 
   res.json({
@@ -90,6 +103,14 @@ router.patch("/:id/block", async (req, res) => {
     details: blocked
       ? `🔒 Compte de ${driver.name} bloqué par le manager`
       : `🔓 Compte de ${driver.name} débloqué par le manager`,
+  });
+
+  emitToDriver(driverId, "driver:notification", {
+    type: blocked ? "block" : "unblock",
+    title: blocked ? "Compte bloqué" : "Compte débloqué",
+    message: blocked
+      ? "Votre compte a été bloqué par le manager. Vous ne pouvez plus recevoir de commandes. Contactez l'administration."
+      : "Votre compte a été débloqué par le manager. Vous pouvez à nouveau recevoir des commandes.",
   });
 
   res.json({

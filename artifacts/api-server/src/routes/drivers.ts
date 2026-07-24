@@ -23,6 +23,8 @@ const formatDriver = (d: typeof driversTable.$inferSelect, stats?: Awaited<Retur
     totalRevenue: d.totalRevenue,
     rating: d.rating,
   }),
+  // stats.rating is null when no reviews exist — fall back to the stored DB value
+  rating: (stats?.rating != null ? stats.rating : d.rating),
   createdAt: d.createdAt.toISOString(),
   lastActiveAt: d.lastActiveAt ? d.lastActiveAt.toISOString() : null,
 });

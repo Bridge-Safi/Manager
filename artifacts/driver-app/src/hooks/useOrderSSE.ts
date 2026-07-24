@@ -1,19 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListDeliveriesQueryKey, getGetDeliveryStatsQueryKey, getGetDelivererQueryKey } from "@workspace/api-client-react";
 import { startContinuousAlarm } from "@/lib/alarm";
+import type { ManagerNotification } from "@/components/ManagerNotificationAlert";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 /**
  * Ouvre une connexion SSE vers /api/events et déclenche l'alarme + rafraîchit
  * les queries dès qu'une commande est assignée à ce livreur par le manager.
+ *
+ * Retourne aussi la dernière notification manager reçue (warn / refuse / block).
  */
 export function useOrderSSE(livreurId: number) {
   const queryClient = useQueryClient();
   const esRef = useRef<EventSource | null>(null);
   // Track known assigned order IDs to avoid double-alarming
   const knownAssignedRef = useRef<Set<number>>(new Set());
+
+  const [managerNotification, setManagerNotification] = useState<ManagerNotification | null>(null);
+  const clearManagerNotification = useCallback(() => setManagerNotification(null), []);
 
   useEffect(() => {
     if (!livreurId) return;
@@ -61,6 +67,16 @@ export function useOrderSSE(livreurId: number) {
       }
     });
 
+    // Notification ciblée du manager (avertissement / refus / blocage)
+    es.addEventListener("driver:notification", (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data) as ManagerNotification;
+        setManagerNotification(data);
+      } catch {
+        // ignore malformed events
+      }
+    });
+
     // Rafraîchir aussi lors d'une mise à jour générale des livraisons
     es.addEventListener("order:created", () => invalidateAll());
 
@@ -73,4 +89,6 @@ export function useOrderSSE(livreurId: number) {
       esRef.current = null;
     };
   }, [livreurId, queryClient]);
+
+  return { managerNotification, clearManagerNotification };
 }
