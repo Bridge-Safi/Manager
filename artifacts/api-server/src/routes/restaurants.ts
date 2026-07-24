@@ -207,6 +207,7 @@ router.get("/:id/stats", async (req, res) => {
 
 // GET /restaurants/overview — all restaurants with live stats (for surveillance)
 router.get("/overview", async (_req, res) => {
+  syncDashboardRestaurants().catch(() => {}); // best-effort, non-bloquant
   geocodePendingRestaurants().catch(() => {}); // best-effort, non-bloquant
   const restaurants = await db
     .select()
