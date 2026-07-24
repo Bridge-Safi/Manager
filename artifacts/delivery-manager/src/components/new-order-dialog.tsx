@@ -10,7 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateOrder, getListOrdersQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 
-const PLATFORMS = ["Bridge Eat", "Bridge Tabac", "Bridge Fleur", "Bridge Pharmacie", "Autre"] as const;
+const PLATFORMS = [
+  "Bridge Eats",
+  "Bridge Tabac",
+  "Bridge Pharmacie",
+  "Bridge Boulangerie",
+  "Bridge Souk",
+  "Bridge Supermarché",
+  "Bridge Fleurs",
+  "Autre",
+] as const;
 
 interface Props {
   open: boolean;

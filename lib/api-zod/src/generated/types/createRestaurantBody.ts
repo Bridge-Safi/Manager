@@ -13,4 +13,5 @@ export interface CreateRestaurantBody {
   cuisine?: string;
   avgPrepTime?: number;
   notes?: string;
+  platform?: string;
 }

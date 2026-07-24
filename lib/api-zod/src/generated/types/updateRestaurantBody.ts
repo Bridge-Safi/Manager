@@ -16,4 +16,5 @@ export interface UpdateRestaurantBody {
   cuisine?: string;
   notes?: string;
   isActive?: boolean;
+  platform?: string;
 }

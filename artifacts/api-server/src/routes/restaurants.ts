@@ -59,15 +59,29 @@ async function syncDashboardRestaurants(): Promise<void> {
     const local = await db.select({ name: restaurantsTable.name }).from(restaurantsTable);
     const localNames = new Set(local.map((r) => r.name.trim().toLowerCase()));
 
+    // Map serviceType from the remote dashboard to our platform values
+    const SERVICE_TO_PLATFORM: Record<string, string> = {
+      restaurant: "eats", nourriture: "eats", eats: "eats",
+      tabac: "tabac",
+      pharmacie: "pharmacie",
+      boulangerie: "boulangerie",
+      souk: "souk",
+      supermarche: "supermarche", supermarché: "supermarche",
+      fleur: "fleurs", fleurs: "fleurs",
+    };
+
     for (const r of remote) {
       const name = (r.name ?? "").trim();
       if (!name || localNames.has(name.toLowerCase())) continue;
+      const rawType = (r.serviceType ?? "").toLowerCase().trim();
+      const platform = SERVICE_TO_PLATFORM[rawType] ?? "eats";
       await db.insert(restaurantsTable).values({
         name,
         phone: "—",
         address: "—",
-        cuisine: r.serviceType && r.serviceType !== "restaurant" ? r.serviceType : null,
+        cuisine: rawType && rawType !== "restaurant" && rawType !== "eats" ? rawType : null,
         notes: `Inscrit via restaurant.safi-bridge.ma${r.email ? ` · ${r.email}` : ""}`,
+        platform,
         status: "open",
         isActive: true,
       });
@@ -87,7 +101,7 @@ router.get("/", async (_req, res) => {
 
 // POST /restaurants
 router.post("/", async (req, res) => {
-  const { name, phone, address, cuisine, avgPrepTime, notes } = req.body as Record<string, string | number>;
+  const { name, phone, address, cuisine, avgPrepTime, notes, platform } = req.body as Record<string, string | number>;
   if (!name || !phone || !address) {
     res.status(400).json({ error: "name, phone et address sont requis" });
     return;
@@ -101,6 +115,7 @@ router.post("/", async (req, res) => {
       cuisine: cuisine ? String(cuisine) : null,
       avgPrepTime: avgPrepTime ? Number(avgPrepTime) : 20,
       notes: notes ? String(notes) : null,
+      platform: platform ? String(platform) : "eats",
       status: "open",
       isActive: true,
     })
@@ -111,7 +126,7 @@ router.post("/", async (req, res) => {
 // PATCH /restaurants/:id
 router.patch("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { status, avgPrepTime, notes, name, phone, address, cuisine, isActive } = req.body as Record<string, string | number | boolean>;
+  const { status, avgPrepTime, notes, name, phone, address, cuisine, isActive, platform } = req.body as Record<string, string | number | boolean>;
 
   const updates: Record<string, unknown> = {};
   if (status !== undefined) updates.status = status;
@@ -122,6 +137,7 @@ router.patch("/:id", async (req, res) => {
   if (address !== undefined) updates.address = address;
   if (cuisine !== undefined) updates.cuisine = cuisine;
   if (isActive !== undefined) updates.isActive = isActive;
+  if (platform !== undefined) updates.platform = platform;
 
   const [updated] = await db
     .update(restaurantsTable)

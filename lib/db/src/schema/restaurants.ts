@@ -9,6 +9,8 @@ export const restaurantsTable = pgTable("restaurants", {
   avgPrepTime: integer("avg_prep_time").notNull().default(20),
   cuisine: text("cuisine"),
   notes: text("notes"),
+  /** Platform this vendor belongs to: eats | tabac | pharmacie | boulangerie | souk | supermarche | fleurs */
+  platform: text("platform").notNull().default("eats"),
   isActive: boolean("is_active").notNull().default(true),
   lastOrderAt: timestamp("last_order_at"),
   passwordHash: text("password_hash"),

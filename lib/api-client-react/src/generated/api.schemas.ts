@@ -451,6 +451,7 @@ export interface Restaurant {
   avgPrepTime: number;
   cuisine?: string | null;
   notes?: string | null;
+  platform: string;
   isActive: boolean;
   lastOrderAt?: string | null;
   createdAt: string;
@@ -473,6 +474,7 @@ export interface RestaurantOverview {
   status: RestaurantOverviewStatus;
   avgPrepTime: number;
   cuisine?: string | null;
+  platform: string;
   isActive: boolean;
   lastOrderAt?: string | null;
   createdAt: string;
@@ -490,6 +492,7 @@ export interface CreateRestaurantBody {
   cuisine?: string;
   avgPrepTime?: number;
   notes?: string;
+  platform?: string;
 }
 
 export type UpdateRestaurantBodyStatus =
@@ -510,6 +513,7 @@ export interface UpdateRestaurantBody {
   cuisine?: string;
   notes?: string;
   isActive?: boolean;
+  platform?: string;
 }
 
 export type CreateReviewBodySentiment =
