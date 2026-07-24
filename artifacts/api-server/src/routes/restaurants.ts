@@ -2,6 +2,41 @@ import { Router } from "express";
 import { db, restaurantsTable, ordersTable } from "@workspace/db";
 import { eq, sql, and, inArray, desc } from "drizzle-orm";
 
+// Géocodage via Nominatim (OpenStreetMap, gratuit, sans clé)
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const q = encodeURIComponent(`${address}, Safi, Maroc`);
+    const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=ma`;
+    const resp = await fetch(url, {
+      headers: { "User-Agent": "GradoEats-Manager/1.0 (contact@bridgesafi.com)" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!resp.ok) return null;
+    const data = (await resp.json()) as { lat: string; lon: string }[];
+    if (!data[0]) return null;
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {
+    return null;
+  }
+}
+
+// Géocode les restaurants sans coordonnées (best-effort, en arrière-plan)
+async function geocodePendingRestaurants(): Promise<void> {
+  const rows = await db
+    .select({ id: restaurantsTable.id, name: restaurantsTable.name, address: restaurantsTable.address })
+    .from(restaurantsTable)
+    .where(sql`lat IS NULL AND address IS NOT NULL AND address != '—'`);
+
+  for (const r of rows) {
+    const coords = await geocodeAddress(r.address !== "—" ? r.address : r.name);
+    if (coords) {
+      await db.update(restaurantsTable)
+        .set({ lat: coords.lat, lng: coords.lng })
+        .where(eq(restaurantsTable.id, r.id));
+    }
+  }
+}
+
 const router = Router();
 
 // ── Restos inscrits sur le dashboard restaurateurs (restaurant.safi-bridge.ma) ──
@@ -45,6 +80,7 @@ async function syncDashboardRestaurants(): Promise<void> {
 // GET /restaurants
 router.get("/", async (_req, res) => {
   await syncDashboardRestaurants();
+  geocodePendingRestaurants().catch(() => {}); // best-effort, non-bloquant
   const rows = await db.select().from(restaurantsTable).orderBy(restaurantsTable.name);
   res.json(rows.map(formatRestaurant));
 });
@@ -171,6 +207,7 @@ router.get("/:id/stats", async (req, res) => {
 
 // GET /restaurants/overview — all restaurants with live stats (for surveillance)
 router.get("/overview", async (_req, res) => {
+  geocodePendingRestaurants().catch(() => {}); // best-effort, non-bloquant
   const restaurants = await db
     .select()
     .from(restaurantsTable)

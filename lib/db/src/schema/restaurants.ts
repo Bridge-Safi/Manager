@@ -12,6 +12,8 @@ export const restaurantsTable = pgTable("restaurants", {
   isActive: boolean("is_active").notNull().default(true),
   lastOrderAt: timestamp("last_order_at"),
   passwordHash: text("password_hash"),
+  lat: real("lat"),
+  lng: real("lng"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

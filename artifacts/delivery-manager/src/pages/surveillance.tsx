@@ -38,6 +38,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+// Icône restaurant (orange, SVG inline)
+const restaurantIcon = L.divIcon({
+  className: "",
+  html: `<div style="
+    width:32px;height:32px;border-radius:50% 50% 50% 0;
+    background:#f97316;border:2px solid #fff;
+    transform:rotate(-45deg);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.5)">
+    <span style="transform:rotate(45deg);font-size:14px;">🍴</span>
+  </div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -34],
+});
+
 function getActivityIcon(action: string) {
   switch (action) {
     case "order_delivered": return <CheckCircle2 className="w-4 h-4 text-green-500" />;
@@ -172,6 +188,23 @@ export default function SurveillancePage() {
                               Dernière activité: {formatDistanceToNow(new Date(driver.lastActiveAt), { addSuffix: true, locale: fr })}
                             </div>
                           )}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                  {restaurants?.filter(r => (r as any).lat && (r as any).lng).map((r) => (
+                    <Marker key={`resto-${r.id}`} position={[(r as any).lat, (r as any).lng]} icon={restaurantIcon}>
+                      <Popup>
+                        <div className="p-1 space-y-1">
+                          <div className="font-bold text-sm">🍴 {r.name}</div>
+                          {r.address && r.address !== "—" && (
+                            <div className="text-xs text-muted-foreground">{r.address}</div>
+                          )}
+                          <div className="text-xs">
+                            <span className={r.status === "open" ? "text-green-500" : "text-red-400"}>
+                              {r.status === "open" ? "● Ouvert" : "● Fermé"}
+                            </span>
+                          </div>
                         </div>
                       </Popup>
                     </Marker>
