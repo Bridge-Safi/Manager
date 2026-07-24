@@ -11,10 +11,17 @@ router.get("/", async (req, res) => {
   const alerts: object[] = [];
 
   // 1. Orders waiting too long (pending for >10 min = warning, >20 min = critical)
+  // On ignore les commandes de plus de 24h : elles sont historiques/abandonnées
+  const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const pendingOrders = await db
     .select()
     .from(ordersTable)
-    .where(eq(ordersTable.status, "pending"));
+    .where(
+      and(
+        eq(ordersTable.status, "pending"),
+        sql`${ordersTable.createdAt} > ${cutoff}`
+      )
+    );
 
   for (const order of pendingOrders) {
     const minutesElapsed = Math.floor((now.getTime() - new Date(order.createdAt).getTime()) / 60000);
