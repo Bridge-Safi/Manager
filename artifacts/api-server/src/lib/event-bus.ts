@@ -24,6 +24,7 @@ export type SSEEventType =
   | "delivery:updated"
   | "driver:updated"
   | "driver:notification"   // targeted: warn / refuse / block notification to a specific driver
+  | "driver:deleted"        // targeted: driver was deleted — client must log out immediately
   | "player:created"
   | "player:updated"
   | "player:deleted"
@@ -52,6 +53,25 @@ export function emitToDriver(driverId: number, type: SSEEventType, data: unknown
       } catch {
         clients.delete(client.id);
       }
+    }
+  }
+}
+
+/**
+ * Notify a deleted driver's SSE connections to log out immediately,
+ * then close and remove those connections from the map.
+ */
+export function closeDriverConnections(driverId: number) {
+  const payload = `event: driver:deleted\ndata: ${JSON.stringify({ driverId })}\n\n`;
+  for (const client of clients.values()) {
+    if (client.driverId === driverId) {
+      try {
+        client.res.write(payload);
+        client.res.end();
+      } catch {
+        // ignore write errors — connection may already be dead
+      }
+      clients.delete(client.id);
     }
   }
 }

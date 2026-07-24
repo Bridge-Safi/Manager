@@ -25,7 +25,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const pendingDispatch = useDispatchPoller(livreurId);
   useLocationReporter(livreurId);
-  useOrderSSE(livreurId);
+  useOrderSSE(livreurId, logoutLivreur);
   const { notification: managerNotification, clear: clearManagerNotification } = useDriverNotificationPoller(livreurId);
 
   const { data: profile } = useGetDeliverer(livreurId, {

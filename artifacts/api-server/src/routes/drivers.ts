@@ -14,6 +14,7 @@ import bcrypt from "bcryptjs";
 import { syncDriverToLivreurs } from "../lib/sync-livreurs";
 import { getRealDriverStats } from "../lib/driver-stats";
 import { popDriverNotification } from "../lib/driver-notification-store";
+import { closeDriverConnections } from "../lib/event-bus";
 
 const router = Router();
 
@@ -146,6 +147,9 @@ router.delete("/:id", async (req, res) => {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
+
+  // Notify and close any open SSE connections for this driver before deleting
+  closeDriverConnections(id);
 
   // Clean up dependent rows first (FK constraints), preserving order history
   await db.delete(resetRequestsTable).where(eq(resetRequestsTable.driverId, id));

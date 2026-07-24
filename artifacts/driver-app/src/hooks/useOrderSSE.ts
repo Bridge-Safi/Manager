@@ -12,11 +12,13 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
  *
  * Retourne aussi la dernière notification manager reçue (warn / refuse / block).
  */
-export function useOrderSSE(livreurId: number) {
+export function useOrderSSE(livreurId: number, onForceLogout?: () => void) {
   const queryClient = useQueryClient();
   const esRef = useRef<EventSource | null>(null);
   // Track known assigned order IDs to avoid double-alarming
   const knownAssignedRef = useRef<Set<number>>(new Set());
+  const onForceLogoutRef = useRef(onForceLogout);
+  onForceLogoutRef.current = onForceLogout;
 
   const [managerNotification, setManagerNotification] = useState<ManagerNotification | null>(null);
   const clearManagerNotification = useCallback(() => setManagerNotification(null), []);
@@ -75,6 +77,13 @@ export function useOrderSSE(livreurId: number) {
       } catch {
         // ignore malformed events
       }
+    });
+
+    // Le livreur a été supprimé par le manager — déconnexion forcée immédiate
+    es.addEventListener("driver:deleted", () => {
+      es.close();
+      esRef.current = null;
+      onForceLogoutRef.current?.();
     });
 
     // Rafraîchir aussi lors d'une mise à jour générale des livraisons
