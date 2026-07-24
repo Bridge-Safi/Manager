@@ -556,6 +556,11 @@ export default function OrdersPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-52 bg-background/95 backdrop-blur-xl border-white/10">
+                                {(order.status === "assigned" || order.status === "in_delivery") && (
+                                  <DropdownMenuItem onClick={() => setSelectedOrder(order)} className="cursor-pointer text-primary focus:text-primary">
+                                    🔄 Réassigner un livreur
+                                  </DropdownMenuItem>
+                                )}
                                 {order.status === "assigned" && (
                                   <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, "in_delivery" as OrderStatus)} className="cursor-pointer">
                                     🛵 Marquer en livraison
